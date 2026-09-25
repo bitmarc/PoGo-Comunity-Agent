@@ -42,6 +42,13 @@ param tavilyApiKey string
 @description('Correos con acceso, separados por coma.')
 param adminEmails string
 
+@description('Usuario de GitHub dueno del paquete en GHCR.')
+param ghcrUsuario string
+
+@secure()
+@description('Token con read:packages para bajar la imagen de GHCR. El paquete es privado porque el repo lo es; sin esto la Container App no puede hacer pull.')
+param ghcrToken string
+
 @description('Deployment del modelo de chat en el recurso de Azure OpenAI.')
 param chatDeployment string = 'gpt-5.6-luna'
 
@@ -207,7 +214,18 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           affinity: 'sticky'
         }
       }
+      registries: [
+        {
+          server: 'ghcr.io'
+          username: ghcrUsuario
+          passwordSecretRef: 'ghcr-token'
+        }
+      ]
       secrets: [
+        {
+          name: 'ghcr-token'
+          value: ghcrToken
+        }
         {
           name: 'google-client-secret'
           value: googleClientSecret
