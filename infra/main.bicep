@@ -203,6 +203,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     managedEnvironmentId: entorno.id
     configuration: {
+      // Obligatorio y explicito: la afinidad de sesion solo se admite en modo Single.
+      // Sin declararlo, la API rechaza el despliegue con
+      // ContainerAppInvalidIngressStickySessionRevisionMode.
+      activeRevisionsMode: 'Single'
       ingress: {
         external: true
         targetPort: 8000

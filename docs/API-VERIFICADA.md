@@ -88,3 +88,24 @@ Verificado contra Postgres 17 real y contra la imagen construida, no solo leyend
     - Un `COPY public* ./` con `public/` vacio funciona en local pero **falla en CI**:
       git no trackea directorios vacios, asi que en un checkout limpio no existe. De ahi
       el `public/.gitkeep`.
+
+## Fase 2, despliegue: dos cosas que rompen el primer intento
+
+16. **La afinidad de sesion exige `activeRevisionsMode: 'Single'` explicito.** Sin
+    declararlo, la API rechaza el despliegue entero con
+    `ContainerAppInvalidIngressStickySessionRevisionMode: Sticky Session is not
+    supported for  revision mode` (con el hueco donde iria el modo). El resto de los
+    recursos si se crea, y reintentar es seguro.
+17. **GHCR es privado si el repo lo es.** Sin un bloque `registries` en la Container App,
+    el pull falla. Se usa un PAT clasico con unicamente `read:packages` como secreto.
+    Comprobado: `docker pull` sin credenciales devuelve `unauthorized`.
+
+Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
+- El comando tiene limite de longitud: un `python -c` con base64 de ~2.400 caracteres falla
+  con `Handshake status 404`. Scripts cortos funcionan.
+- Dentro del `python -c` solo se pueden usar comillas **simples**: las dobles escapadas se
+  manglean al pasar por la CLI en Windows.
+- Con `minReplicas: 0` hay que despertar la app con una peticion antes del exec, o no hay
+  replica a la que conectarse.
+- La API tiene rate limit: tras ~6 invocaciones seguidas devuelve `429` con
+  `retry-after: 600`.
