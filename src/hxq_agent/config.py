@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # Solo rellenar para clavar una version concreta a proposito.
     azure_openai_api_version: str = ""
     hxq_chat_deployment: str = "gpt-5.6-luna"
-    hxq_image_deployment: str = "gpt-image-1.5"
+    hxq_image_deployment: str = "gpt-image-2"
 
     # ---------- Tools ----------
     tavily_api_key: str = ""

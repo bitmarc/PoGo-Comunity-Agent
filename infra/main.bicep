@@ -42,6 +42,12 @@ param tavilyApiKey string
 @description('Correos con acceso, separados por coma.')
 param adminEmails string
 
+@description('Deployment del modelo de chat en el recurso de Azure OpenAI.')
+param chatDeployment string = 'gpt-5.6-luna'
+
+@description('Deployment del modelo de imagen. Verificar el nombre real con: az cognitiveservices account deployment list -n <recurso> -g <rg> -o table')
+param imageDeployment string = 'gpt-image-2'
+
 @description('Replicas minimas. 0 = escala a cero (cold start ~15s). 1 = sin cold start.')
 @minValue(0)
 @maxValue(1)
@@ -246,11 +252,11 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             }
             {
               name: 'HXQ_CHAT_DEPLOYMENT'
-              value: 'gpt-5.6-luna'
+              value: chatDeployment
             }
             {
               name: 'HXQ_IMAGE_DEPLOYMENT'
-              value: 'gpt-image-1.5'
+              value: imageDeployment
             }
             {
               name: 'AZURE_STORAGE_ACCOUNT'
