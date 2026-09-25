@@ -73,3 +73,33 @@ def settings() -> Settings:
         hxq_community_city="Guadalajara",
         hxq_timezone="America/Mexico_City",
     )
+
+
+@pytest.fixture
+def mock_httpx(monkeypatch: pytest.MonkeyPatch):
+    """Intercepta las llamadas HTTP de las tools sin dependencias extra.
+
+    `usar(handler)` instala el handler; `peticiones` acumula lo que salio, para poder
+    afirmar sobre el cuerpo enviado (por ejemplo, que la busqueda 'oficial' realmente
+    restringe dominios).
+    """
+    import httpx as _httpx
+
+    real_client = _httpx.AsyncClient
+
+    class Registro:
+        def __init__(self) -> None:
+            self.peticiones: list[_httpx.Request] = []
+
+        def usar(self, handler) -> None:
+            def envoltura(request: _httpx.Request) -> _httpx.Response:
+                self.peticiones.append(request)
+                return handler(request)
+
+            def factory(*args, **kwargs):
+                kwargs["transport"] = _httpx.MockTransport(envoltura)
+                return real_client(*args, **kwargs)
+
+            monkeypatch.setattr(_httpx, "AsyncClient", factory)
+
+    return Registro()

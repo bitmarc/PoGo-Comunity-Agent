@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     hxq_chat_deployment: str = "gpt-5.6-luna"
     hxq_image_deployment: str = "gpt-image-1.5"
 
+    # ---------- Tools ----------
+    tavily_api_key: str = ""
+    # Fuentes en las que confiamos para datos de eventos oficiales. Separadas por coma
+    # para poder ajustarlas sin redeploy.
+    hxq_official_sources: str = "pokemongolive.com,leekduck.com,serebii.net"
+
     # ---------- Acceso ----------
     # Lista de correos separada por comas. Vacia = nadie entra (fail closed).
     hxq_admin_emails: str = ""
@@ -50,6 +56,11 @@ class Settings(BaseSettings):
         return frozenset(
             email.strip().lower() for email in self.hxq_admin_emails.split(",") if email.strip()
         )
+
+    @property
+    def official_sources(self) -> list[str]:
+        """Dominios confiables para datos de eventos oficiales."""
+        return [d.strip() for d in self.hxq_official_sources.split(",") if d.strip()]
 
     @property
     def uses_managed_identity(self) -> bool:

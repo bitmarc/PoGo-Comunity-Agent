@@ -14,6 +14,7 @@ from agent_framework import Agent
 from agent_framework.openai import OpenAIChatClient
 
 from hxq_agent.agent.instructions import build_instructions
+from hxq_agent.agent.tools import build_tools
 from hxq_agent.config import Settings, get_settings
 
 AGENT_NAME = "HXQ"
@@ -70,6 +71,7 @@ def build_agent(
     """Arma el agente conversacional.
 
     `client` se puede inyectar para tests: asi el agente se prueba sin tocar Azure.
+    `tools=[]` desactiva las tools a proposito; `tools=None` usa el set por defecto.
     """
     settings = settings or get_settings()
     return Agent(
@@ -77,5 +79,5 @@ def build_agent(
         build_instructions(settings),
         name=AGENT_NAME,
         description=AGENT_DESCRIPTION,
-        tools=list(tools or []),
+        tools=list(tools) if tools is not None else build_tools(),
     )

@@ -88,3 +88,19 @@ uv run pytest -q         # ejecutar dentro del entorno del proyecto
 | `HXQ_ADMIN_EMAILS` | Allowlist de correos, separados por coma. Vacia = nadie entra |
 | `AZURE_OPENAI_ENDPOINT` | Recurso de Azure OpenAI |
 | `AZURE_OPENAI_API_KEY` | Opcional: si se omite se usa `DefaultAzureCredential` (Managed Identity / `az login`) |
+| `TAVILY_API_KEY` | Busqueda web. [Key gratuita](https://tavily.com), 1.000 creditos/mes. Sin ella el agente conversa pero no verifica datos de eventos |
+| `HXQ_OFFICIAL_SOURCES` | Opcional: dominios confiables del ambito `oficial` |
+
+**No configures `AZURE_OPENAI_API_VERSION`.** Cada cliente de MAF elige el valor correcto
+para su superficie de API; fijarlo produce `400 BadRequest: API version not supported`.
+Ver `docs/API-VERIFICADA.md`.
+
+## Que sabe hacer hoy
+
+- Conversar en espanol de Mexico, con la fecha de hoy resuelta y zona horaria de la comunidad
+- `buscar_web(query, ambito)`: busqueda via Tavily. El ambito `oficial` restringe a
+  pokemongolive.com, LeekDuck y Serebii; `abierto` busca en todo internet
+- `consultar_clima(lugar, fecha)`: pronostico via Open-Meteo, horizonte de 16 dias
+- Citar la fuente de cada dato de evento, y **negarse a inventar** una fecha si no la verifica
+- Controles por chat: tono, canal destino y longitud del copy
+- Cada llamada a tool visible como paso colapsable en la interfaz

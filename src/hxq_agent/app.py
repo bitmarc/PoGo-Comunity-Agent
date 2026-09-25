@@ -1,10 +1,9 @@
 """Entrypoint de Chainlit.
 
-Unico archivo (junto con `auth.py` y `ui/`) que conoce Chainlit. Su trabajo es traducir
-entre la UI y el agente; ninguna regla de negocio vive aqui.
+Traduce entre la UI y el agente. Ninguna regla de negocio vive aqui.
 
-Correr en local:
-    python -m uv run chainlit run src/hxq_agent/app.py -w
+Correr en local (PowerShell, desde la raiz del proyecto):
+    ./.venv/Scripts/chainlit.exe run src/hxq_agent/app.py -w
 """
 
 from __future__ import annotations
@@ -15,7 +14,16 @@ import chainlit as cl
 
 import hxq_agent.auth  # noqa: F401  # importarlo registra el @cl.oauth_callback
 from hxq_agent.agent.factory import ConfigError, build_agent
+from hxq_agent.agent.instructions import build_instructions
+from hxq_agent.config import get_settings
+from hxq_agent.ui.settings import (
+    CLAVE_PREFERENCIAS,
+    PREFERENCIAS_POR_DEFECTO,
+    build_chat_settings,
+    describir_preferencias,
+)
 from hxq_agent.ui.starters import build_starters
+from hxq_agent.ui.steps import mostrar_tools_en_ui
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,7 +57,40 @@ async def on_chat_start() -> None:
 
     cl.user_session.set(_AGENT_KEY, agent)
     cl.user_session.set(_SESSION_KEY, agent.create_session())
+    cl.user_session.set(CLAVE_PREFERENCIAS, dict(PREFERENCIAS_POR_DEFECTO))
+    await build_chat_settings().send()
+
+    if not get_settings().tavily_api_key.strip():
+        await cl.Message(
+            content=(
+                "Aviso: la busqueda web esta apagada porque falta `TAVILY_API_KEY`. "
+                "Puedo redactar y conversar, pero **no puedo verificar fechas ni datos "
+                "de eventos oficiales** hasta que la configures "
+                "([key gratuita en tavily.com](https://tavily.com))."
+            )
+        ).send()
+
     logger.info("Conversacion iniciada")
+
+
+@cl.on_settings_update
+async def on_settings_update(settings: dict[str, str]) -> None:
+    """Guarda los controles del chat. Surten efecto en el siguiente turno."""
+    preferencias = {**PREFERENCIAS_POR_DEFECTO, **(settings or {})}
+    cl.user_session.set(CLAVE_PREFERENCIAS, preferencias)
+    logger.info("Preferencias actualizadas: %s", preferencias)
+
+
+def _instrucciones_del_turno() -> str:
+    """Instrucciones base mas las preferencias activas.
+
+    Se reconstruyen en cada turno a proposito: asi las preferencias que el admin cambie a
+    mitad de la conversacion aplican de inmediato, y la fecha de hoy se recalcula (importa
+    si una sesion queda abierta pasada la medianoche).
+    """
+    base = build_instructions()
+    extra = describir_preferencias(cl.user_session.get(CLAVE_PREFERENCIAS) or {})
+    return f"{base}\n\n{extra}" if extra else base
 
 
 @cl.on_message
@@ -68,7 +109,13 @@ async def on_message(message: cl.Message) -> None:
     await reply.send()
 
     try:
-        stream = agent.run(message.content, stream=True, session=session)
+        stream = agent.run(
+            message.content,
+            stream=True,
+            session=session,
+            middleware=[mostrar_tools_en_ui],
+            options={"instructions": _instrucciones_del_turno()},
+        )
         async for update in stream:
             if update.text:
                 await reply.stream_token(update.text)
