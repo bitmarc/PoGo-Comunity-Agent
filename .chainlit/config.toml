@@ -1,0 +1,41 @@
+[project]
+# Socket.io: forzar websocket. Detras de un router con varias replicas el polling
+# largo rompe la sesion; con session affinity + solo websocket, no.
+transports = ["websocket"]
+
+# Se restringe al dominio real en Fase 2 (despliegue). "*" solo vale en local.
+allow_origins = ["*"]
+
+session_timeout = 3600
+user_session_timeout = 1296000
+cache = false
+user_env = []
+
+[features]
+# El contenido que genera el agente se renderiza como markdown, nunca como HTML crudo.
+unsafe_allow_html = false
+latex = false
+user_message_markdown = true
+edit_message = true
+
+# Fase 6: subir capturas de perfil para extraer metricas por vision.
+[features.spontaneous_file_upload]
+    enabled = true
+    accept = ["image/png", "image/jpeg", "image/webp"]
+    max_files = 10
+    max_size_mb = 15
+
+[features.audio]
+    enabled = false
+
+[features.mcp]
+    enabled = false
+
+[UI]
+name = "HXQ"
+language = "es"
+default_theme = "dark"
+default_sidebar_state = "closed"
+
+[meta]
+generated_by = "2.12.0"

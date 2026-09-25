@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Entorno y secretos
+.env
+.env.local
+*.pem
+
+# Chainlit
+.chainlit/translations/
+.files/
+.chainlit/*.db
+
+# Artefactos generados
+out/
+render_cache/
+*.png.tmp
+
+# SO / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs pegados para depurar
+*.log
+
+# Secretos descargados de consolas cloud: NUNCA al repo
+client_secret_*.json
+*credentials*.json
+*.publishsettings

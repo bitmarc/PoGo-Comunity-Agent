@@ -1,0 +1,9 @@
+Generar infografias
+Generar quedadas (titulos, descripciones lugar, hora fecha e imagen) para despues crear quedadas en app campfire y anunciarlo en comunidad de whatsapp, etc.
+Agendar eventos (agregar a calendario)
+consultar dudads de eventos/quedadas
+Generar anuncios de eventos
+Generar dinámicas o cuncursos para ciertos eventos
+Investigar
+Obtener metricas de jugadores
+Actualizar lista de jugadores
