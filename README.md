@@ -79,6 +79,47 @@ uv add <paquete>         # anadir dependencia y actualizar el lock
 uv run pytest -q         # ejecutar dentro del entorno del proyecto
 ```
 
+## Historial persistente (opcional en local)
+
+Sin `DATABASE_URL` la app funciona, pero las conversaciones se pierden al recargar.
+Para tener historial en local, un Postgres en Docker:
+
+```powershell
+docker compose up -d
+.\.venv\Scripts\python.exe infra/db/apply_schema.py
+```
+
+Y en `.env`:
+
+```
+DATABASE_URL=postgresql://postgres:devpass@localhost:55432/hxqdev
+```
+
+En produccion es [Neon](https://neon.tech) en plan Free. El esquema es el mismo: solo
+cambia la cadena de conexion.
+
+## Despliegue
+
+```powershell
+# 1. Parametros
+Copy-Item infra/main.parameters.example.json infra/main.parameters.json   # y rellenar
+
+# 2. Infraestructura (crea identidad, storage, logs, insights, Container App)
+az deployment group create -g <resource-group> `
+  --template-file infra/main.bicep `
+  --parameters @infra/main.parameters.json
+
+# 3. Esquema en Neon
+$env:DATABASE_URL="<cadena de Neon>"
+.\.venv\Scripts\python.exe infra/db/apply_schema.py
+```
+
+El despliegue imprime `urlApp` y `redirectUriGoogle`: ese redirect URI hay que **anadirlo
+en Google Cloud Console** junto al de localhost, o el login fallara en produccion.
+
+Despues, cada push a `main` reconstruye la imagen en GHCR y actualiza la Container App
+(`.github/workflows/deploy.yml`).
+
 ## Configuracion requerida
 
 | Variable | Para que |
@@ -90,6 +131,9 @@ uv run pytest -q         # ejecutar dentro del entorno del proyecto
 | `AZURE_OPENAI_API_KEY` | Opcional: si se omite se usa `DefaultAzureCredential` (Managed Identity / `az login`) |
 | `TAVILY_API_KEY` | Busqueda web. [Key gratuita](https://tavily.com), 1.000 creditos/mes. Sin ella el agente conversa pero no verifica datos de eventos |
 | `HXQ_OFFICIAL_SOURCES` | Opcional: dominios confiables del ambito `oficial` |
+| `DATABASE_URL` | Postgres (Neon en produccion). Sin ella no hay historial |
+| `AZURE_STORAGE_ACCOUNT` / `AZURE_STORAGE_CONTAINER` | Blob Storage para imagenes y adjuntos. Usa Managed Identity, sin claves |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Opcional: telemetria. Los prompts NO se exportan salvo `HXQ_TELEMETRY_SENSITIVE=true` |
 
 **No configures `AZURE_OPENAI_API_VERSION`.** Cada cliente de MAF elige el valor correcto
 para su superficie de API; fijarlo produce `400 BadRequest: API version not supported`.

@@ -35,3 +35,6 @@ Thumbs.db
 client_secret_*.json
 *credentials*.json
 *.publishsettings
+
+# Parametros de despliegue: llevan secretos. Solo el .example va al repo.
+infra/main.parameters.json

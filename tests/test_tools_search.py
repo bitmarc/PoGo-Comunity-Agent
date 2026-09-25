@@ -76,11 +76,9 @@ class TestAmbitos:
 
         cuerpo = json.loads(mock_httpx.peticiones[0].content)
         assert cuerpo["include_domains_mode"] == "restrict"
-        assert set(cuerpo["include_domains"]) == {
-            "pokemongolive.com",
-            "leekduck.com",
-            "serebii.net",
-        }
+        # Contra lo configurado, no contra una lista fija: las fuentes son una decision
+        # de contenido que cambia (Niantic movio su sitio a pokemongo.com).
+        assert set(cuerpo["include_domains"]) == set(settings_con_tavily.official_sources)
 
     async def test_abierto_no_restringe_dominios(self, settings_con_tavily, mock_httpx) -> None:
         mock_httpx.usar(lambda req: _respuesta_ok())
@@ -169,9 +167,14 @@ class TestFuentesConfigurables:
         s = Settings(_env_file=None, hxq_official_sources="a.com, b.org")
         assert s.official_sources == ["a.com", "b.org"]
 
-    def test_el_default_son_las_tres_fuentes_pogo(self) -> None:
-        assert Settings(_env_file=None).official_sources == [
-            "pokemongolive.com",
-            "leekduck.com",
-            "serebii.net",
-        ]
+    def test_el_default_nunca_esta_vacio(self) -> None:
+        """Una lista vacia volveria el ambito 'oficial' silenciosamente irrestricto.
+
+        No se fija QUE dominios son: eso es contenido y cambia. Se fija que haya.
+        """
+        fuentes = Settings(_env_file=None).official_sources
+        assert fuentes, "sin fuentes, 'oficial' no restringe nada"
+        assert all("." in d and " " not in d for d in fuentes), "deben ser dominios"
+
+    def test_una_lista_vacia_configurada_se_detecta(self) -> None:
+        assert Settings(_env_file=None, hxq_official_sources=" , ,").official_sources == []

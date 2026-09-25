@@ -1,0 +1,27 @@
+# Entorno local: se reconstruye dentro de la imagen
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Secretos: NUNCA dentro de una imagen
+.env
+.env.*
+!.env.example
+client_secret_*.json
+*credentials*.json
+*.pem
+
+# No hace falta para correr
+.git/
+.github/
+tests/
+docs/
+infra/
+uso.txt
+*.log
+*.md
+!README.md
+!chainlit.md

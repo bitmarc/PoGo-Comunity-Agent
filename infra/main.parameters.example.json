@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "_comentario": [
+    "Copia este archivo a infra/main.parameters.json y rellenalo.",
+    "El archivo real esta en .gitignore: lleva secretos y NO va al repo.",
+    "Alternativa sin secretos en disco: pasar los valores con -p clave=valor en el",
+    "comando de despliegue, leyendolos de Key Vault o del gestor de contrasenas."
+  ],
+  "parameters": {
+    "prefijo": {
+      "value": "hxq"
+    },
+    "ubicacion": {
+      "value": "eastus2"
+    },
+    "imagen": {
+      "value": "ghcr.io/<usuario>/hxq-agent:latest"
+    },
+    "nombreAzureOpenAI": {
+      "value": "hxq-agent-oai"
+    },
+    "adminEmails": {
+      "value": "marcoarojas.95@gmail.com"
+    },
+    "replicasMinimas": {
+      "value": 0
+    },
+    "googleClientId": {
+      "value": "<id>.apps.googleusercontent.com"
+    },
+    "googleClientSecret": {
+      "value": "GOCSPX-<secreto>"
+    },
+    "chainlitAuthSecret": {
+      "value": "<64 hex: openssl rand -hex 32>"
+    },
+    "databaseUrl": {
+      "value": "postgresql://<usuario>:<pass>@<host>.neon.tech/neondb?sslmode=require"
+    },
+    "tavilyApiKey": {
+      "value": "tvly-<key>"
+    }
+  }
+}

@@ -39,15 +39,26 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""
     # Fuentes en las que confiamos para datos de eventos oficiales. Separadas por coma
     # para poder ajustarlas sin redeploy.
-    hxq_official_sources: str = "pokemongolive.com,leekduck.com,serebii.net"
+    hxq_official_sources: str = "pokemongo.com,pokemongolive.com,leekduck.com,serebii.net"
+
+    # ---------- Persistencia ----------
+    # Cadena de Neon (o cualquier Postgres). Vacia = la app corre sin historial.
+    database_url: str = ""
+    azure_storage_account: str = ""
+    azure_storage_container: str = "hxq-media"
+
+    # ---------- Observabilidad ----------
+    applicationinsights_connection_string: str = ""
+    # Exportar prompts y respuestas a telemetria. Apagado: lleva contenido de la comunidad.
+    hxq_telemetry_sensitive: bool = False
 
     # ---------- Acceso ----------
     # Lista de correos separada por comas. Vacia = nadie entra (fail closed).
     hxq_admin_emails: str = ""
 
     # ---------- Contexto de la comunidad ----------
-    hxq_community_name: str = "la comunidad"
-    hxq_community_city: str = "Mexico"
+    hxq_community_name: str = "HuixquiGo"
+    hxq_community_city: str = "Huixquilucan"
     hxq_timezone: str = "America/Mexico_City"
 
     @property

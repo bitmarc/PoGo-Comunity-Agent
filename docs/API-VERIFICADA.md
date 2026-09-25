@@ -57,3 +57,34 @@ El plan asumia la API de Semantic Kernel / MAF temprano. La real es distinta:
    Por eso `AZURE_OPENAI_API_VERSION` va **sin valor** y `build_chat_client` solo la pasa
    si esta configurada a proposito. Un valor unico para todo el proyecto rompe al cliente
    que no coincida.
+
+## Fase 2: persistencia y contenedor
+
+Verificado contra Postgres 17 real y contra la imagen construida, no solo leyendo docs.
+
+9. **El esquema del data layer no viene en el paquete.** Esta en el repo aparte
+   `Chainlit/chainlit-datalayer`, en `prisma/migrations/`. Las tablas son PascalCase
+   entrecomilladas (`"Thread"`) con columnas camelCase (`"threadId"`), estilo Prisma, y el
+   data layer las consulta literalmente: renombrar cualquier cosa lo rompe. El DDL copiado
+   y hecho idempotente vive en `infra/db/001_chainlit_schema.sql`.
+10. **`ChainlitDataLayer` necesita `asyncpg`**, que no es dependencia de `chainlit`.
+11. **Chainlit no mapea `tags` al `ThreadDict`.** La columna se escribe bien en la base
+    (comprobado), pero `get_thread()` no la devuelve. Si hace falta leer tags, hay que
+    consultarlos directamente.
+12. **`create_step` esta envuelto en `@queue_until_user_message()`**, que exige el
+    contexto de Chainlit (un websocket activo). Para probarlo fuera de la app se llama a
+    `dl.create_step.__wrapped__(dl, ...)`.
+13. **El `AzureBlobStorageClient` de Chainlit solo acepta storage key**, no Managed
+    Identity. Por eso `storage/blob.py` implementa `BaseStorageClient` (4 metodos) con
+    `DefaultAzureCredential` y firma las URLs de lectura con una user delegation key.
+    Eso exige el rol **Storage Blob Delegator** ademas de Blob Data Contributor: sin el,
+    `get_user_delegation_key()` falla y no se pueden generar URLs.
+14. **Chainlit escribe en `/app` al arrancar** (`.files` y `.chainlit/translations`). Con
+    un usuario sin privilegios el contenedor muere con
+    `PermissionError: '/app/.files'`. Hay que crear esos directorios en el Dockerfile con
+    el dueno correcto.
+15. **Dos trampas del contexto de build**, ambas encontradas construyendo:
+    - `*.md` en `.dockerignore` excluye `chainlit.md`, que es la pantalla de bienvenida.
+    - Un `COPY public* ./` con `public/` vacio funciona en local pero **falla en CI**:
+      git no trackea directorios vacios, asi que en un checkout limpio no existe. De ahi
+      el `public/.gitkeep`.

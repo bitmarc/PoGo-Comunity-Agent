@@ -6,6 +6,7 @@ ni gastar tokens.
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
@@ -14,6 +15,30 @@ from agent_framework import ChatResponse, ChatResponseUpdate, Content, Message
 from agent_framework._types import ResponseStream
 
 from hxq_agent.config import Settings
+
+# Prefijos de variables que configuran la app. Importar chainlit ejecuta load_dotenv(),
+# asi que el `.env` del desarrollador acaba en os.environ y `Settings(_env_file=None)`
+# lo sigue viendo. Sin aislarlo, la suite pasa o falla segun la maquina.
+_PREFIJOS_PROPIOS = (
+    "HXQ_",
+    "AZURE_",
+    "TAVILY_",
+    "DATABASE_URL",
+    "APPLICATIONINSIGHTS_",
+    "OAUTH_",
+    "CHAINLIT_",
+)
+
+
+@pytest.fixture(autouse=True)
+def _entorno_aislado(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Quita la configuracion real del entorno antes de cada test.
+
+    Los tests deben depender solo de lo que declaran, nunca del `.env` local.
+    """
+    for nombre in list(os.environ):
+        if nombre.upper().startswith(_PREFIJOS_PROPIOS):
+            monkeypatch.delenv(nombre, raising=False)
 
 
 class FakeChatClient:

@@ -1,0 +1,3 @@
+Aqui van el logo, favicon y theme.json de Chainlit (Fase 3).
+Este archivo existe para que git conserve el directorio: sin el, un checkout limpio
+no tendria public/ y el COPY del Dockerfile fallaria en CI.

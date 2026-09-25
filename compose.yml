@@ -1,0 +1,31 @@
+# Postgres local para desarrollo, para no gastar el plan gratuito de Neon mientras
+# se itera. El esquema se aplica con:
+#   ./.venv/Scripts/python.exe infra/db/apply_schema.py
+#
+# Arrancar:  docker compose up -d
+# Parar:     docker compose down          (los datos sobreviven)
+# Borrar:    docker compose down -v       (los datos NO sobreviven)
+#
+# Luego en .env:
+#   DATABASE_URL=postgresql://postgres:devpass@localhost:55432/hxqdev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: hxq-postgres
+    environment:
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: hxqdev
+    ports:
+      # 55432 y no 5432 para no chocar con un Postgres ya instalado en la maquina.
+      - "55432:5432"
+    volumes:
+      - hxq-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hxqdev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  hxq-pgdata:

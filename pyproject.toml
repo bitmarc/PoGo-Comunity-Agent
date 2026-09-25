@@ -11,6 +11,8 @@ dependencies = [
     "httpx>=0.28.0",
     "agent-framework-foundry>=1.13.1",
     "tzdata>=2026.4",
+    "asyncpg>=0.31.0",
+    "azure-monitor-opentelemetry-exporter>=1.0.0b57",
 ]
 
 [project.optional-dependencies]

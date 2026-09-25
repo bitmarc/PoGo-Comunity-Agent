@@ -16,6 +16,8 @@ import hxq_agent.auth  # noqa: F401  # importarlo registra el @cl.oauth_callback
 from hxq_agent.agent.factory import ConfigError, build_agent
 from hxq_agent.agent.instructions import build_instructions
 from hxq_agent.config import get_settings
+from hxq_agent.observability import configurar_telemetria
+from hxq_agent.storage.db import build_data_layer
 from hxq_agent.ui.settings import (
     CLAVE_PREFERENCIAS,
     PREFERENCIAS_POR_DEFECTO,
@@ -30,6 +32,19 @@ logger = logging.getLogger(__name__)
 
 _AGENT_KEY = "hxq_agent"
 _SESSION_KEY = "hxq_session"
+
+# Se configura al importar el modulo, antes de atender cualquier peticion.
+configurar_telemetria()
+
+
+@cl.data_layer
+def obtener_data_layer():
+    """Historial persistente. Si devuelve None, Chainlit corre sin persistencia.
+
+    Chainlit invoca esto en cada conexion, por eso `build_data_layer` cachea: un pool de
+    conexiones por usuario agotaria los limites del plan gratuito de Neon.
+    """
+    return build_data_layer()
 
 
 @cl.set_starters
