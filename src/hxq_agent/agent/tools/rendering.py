@@ -85,7 +85,8 @@ async def render_pieza(
                 "(lista de tipos del Pokemon protagonista; de ahi salen los colores). "
                 "quedada: lugar, fecha (aaaa-mm-dd), hora_inicio (HH:MM), hora_fin, "
                 "detalles (lista). anuncio_evento: fecha_inicio, fecha_fin, "
-                "hora_inicio, hora_fin, bonus (lista)."
+                "hora_inicio, hora_fin, bonus (lista). dinamica: premio, fecha_limite, "
+                "reglas (lista de 2 a 5), desempate."
             )
         ),
     ],

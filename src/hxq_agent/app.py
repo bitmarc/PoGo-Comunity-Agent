@@ -18,6 +18,7 @@ from hxq_agent.agent.instructions import build_instructions
 from hxq_agent.config import get_settings
 from hxq_agent.observability import configurar_telemetria
 from hxq_agent.storage.db import build_data_layer
+from hxq_agent.ui.acciones import ofrecer_acciones, tomar_pendientes
 from hxq_agent.ui.settings import (
     CLAVE_PREFERENCIAS,
     PREFERENCIAS_POR_DEFECTO,
@@ -141,3 +142,8 @@ async def on_message(message: cl.Message) -> None:
         )
 
     await reply.update()
+
+    # Al cerrar el turno, y no antes: aqui ya existe el copy por canal que el agente
+    # escribio despues de dibujar la pieza, y es la mitad de lo que se archiva.
+    if pendientes := tomar_pendientes():
+        await ofrecer_acciones(pendientes, reply.content)

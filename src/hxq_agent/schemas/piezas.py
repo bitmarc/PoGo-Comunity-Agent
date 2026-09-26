@@ -158,8 +158,41 @@ class AnuncioEvento(_PiezaBase):
         return "todo el dia"
 
 
+class Dinamica(_PiezaBase):
+    """Una dinamica o concurso de la comunidad.
+
+    El premio y la fecha limite son obligatorios a proposito: una dinamica sin premio
+    claro o sin fecha de cierre genera discusiones que acaban en el chat de admins.
+    """
+
+    plantilla: Literal["dinamica"] = "dinamica"
+
+    premio: Annotated[str, Field(min_length=2, max_length=40)]
+    fecha_limite: date
+
+    # Entre dos y cinco reglas. Con una no es una dinamica; con mas de cinco nadie las
+    # lee y la pieza desborda.
+    reglas: Annotated[
+        list[Annotated[str, Field(min_length=3, max_length=90)]],
+        Field(min_length=2, max_length=5),
+    ]
+
+    # Que pasa si hay empate. No es opcional por experiencia: el empate siempre llega.
+    desempate: Annotated[str, Field(max_length=120)] = ""
+
+    @property
+    def fecha_texto(self) -> str:
+        return fecha_larga(self.fecha_limite)
+
+    @property
+    def horario_texto(self) -> str:
+        """Las dinamicas no tienen horario; la plantilla base lo pide igual."""
+        return ""
+
+
 # Registro de plantillas: el nombre que usa el agente -> el modelo que valida.
 PLANTILLAS: dict[str, type[_PiezaBase]] = {
     "quedada": Quedada,
     "anuncio_evento": AnuncioEvento,
+    "dinamica": Dinamica,
 }

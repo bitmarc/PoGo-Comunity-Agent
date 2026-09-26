@@ -1,0 +1,92 @@
+{# Dinamica o concurso: el premio y la fecha limite en grande, porque son lo que decide
+   si alguien participa. Las reglas debajo, numeradas. #}
+{% extends "base.html.j2" %}
+
+{% block estilos %}
+  .cabecera {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+  .destacado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 190px;
+    text-align: center;
+  }
+  .destacado__etiqueta {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 27px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+  .destacado__valor {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 800;
+    font-size: 46px;
+    line-height: 1.05;
+    color: #fff;
+  }
+
+  .reglas__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    counter-reset: regla;
+  }
+  .regla {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    font-size: 31px;
+    line-height: 1.25;
+  }
+  /* Numero en circulo neon: las reglas se leen en orden y hay que poder referirse a
+     "la regla 2" cuando alguien pregunte. */
+  .regla__num {
+    flex: 0 0 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+  }
+{% endblock %}
+
+{% block cuerpo %}
+<section class="cabecera">
+  <div class="destacado tarjeta neon-borde" style="--glow: var(--acento-1)">
+    <span class="destacado__etiqueta neon-texto--color" style="--glow: var(--acento-1)">Premio</span>
+    <span class="destacado__valor">{{ premio }}</span>
+  </div>
+  <div class="destacado tarjeta neon-borde" style="--glow: var(--acento-2)">
+    <span class="destacado__etiqueta neon-texto--color" style="--glow: var(--acento-2)">Hasta</span>
+    <span class="destacado__valor">{{ fecha_texto }}</span>
+  </div>
+</section>
+
+<section class="tarjeta neon-borde" style="--glow: var(--acento-1); padding-top: 40px">
+  <span class="tarjeta__etiqueta neon-texto--color" style="--glow: var(--acento-1)">
+    Cómo participar
+  </span>
+  <div class="reglas__lista">
+    {% for regla in reglas %}
+    <div class="regla">
+      <span class="regla__num neon-borde neon-texto--color"
+            style="--glow: {{ 'var(--acento-2)' if loop.index0 % 2 else 'var(--acento-1)' }}">
+        {{ loop.index }}
+      </span>
+      <span>{{ regla }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

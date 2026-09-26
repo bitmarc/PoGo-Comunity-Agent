@@ -20,6 +20,8 @@ from typing import Any
 import chainlit as cl
 from agent_framework import FunctionInvocationContext, function_middleware
 
+from hxq_agent.ui.acciones import registrar_pendiente
+
 logger = logging.getLogger(__name__)
 
 # Como se le presenta cada tool al admin. Si aparece una sin entrada aqui, se muestra con
@@ -29,6 +31,7 @@ _ETIQUETAS: dict[str, str] = {
     "consultar_clima": "Consultando el clima",
     "render_pieza": "Dibujando la pieza",
     "crear_ics": "Preparando el calendario",
+    "buscar_en_biblioteca": "Revisando lo ya publicado",
 }
 
 _MAX_SALIDA = 4000
@@ -109,7 +112,26 @@ async def mostrar_tools_en_ui(context: FunctionInvocationContext, call_next: Any
     # pieza y el calendario son justo lo que el admin tiene que ver y descargar.
     for ruta in generados:
         if ruta.suffix == ".png":
+            # Se anota para poder ofrecer "Aprobar" al cerrar el turno, cuando ya exista
+            # el copy que acompana a la pieza.
+            if nombre == "render_pieza":
+                titulo = _titulo_de(texto) or ruta.stem
+                registrar_pendiente(ruta, _plantilla_de(argumentos), titulo)
             elemento = cl.Image(path=str(ruta), size="large", name=ruta.name)
         else:
             elemento = cl.File(path=str(ruta), name=ruta.name, display="inline")
         await cl.Message(content="", elements=[elemento]).send()
+
+
+def _titulo_de(texto: str) -> str:
+    """Titulo que reporta `render_pieza` en su salida."""
+    for linea in texto.splitlines():
+        if linea.startswith("Titulo:"):
+            return linea.partition(":")[2].strip()
+    return ""
+
+
+def _plantilla_de(argumentos: Any) -> str:
+    if isinstance(argumentos, dict):
+        return str(argumentos.get("plantilla") or "pieza")
+    return "pieza"

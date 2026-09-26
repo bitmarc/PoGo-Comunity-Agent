@@ -202,3 +202,53 @@ class TestContrasteEntreAcentos:
     def test_un_par_que_ya_contrasta_no_se_toca(self) -> None:
         a1, a2 = acentos_desde_tipos(["planta", "hada"])
         assert (a1, a2) == (COLORES_TIPO["planta"], COLORES_TIPO["hada"])
+
+
+class TestDinamica:
+    """Una dinamica sin premio claro o sin desempate acaba en discusion."""
+
+    def _valida(self, **extra):
+        from hxq_agent.schemas.piezas import Dinamica
+
+        base = {
+            "titulo": "Concurso",
+            "premio": "Pase de incursión",
+            "fecha_limite": date(2026, 10, 31),
+            "reglas": ["Regla uno", "Regla dos"],
+        }
+        return Dinamica(**{**base, **extra})
+
+    def test_caso_minimo(self) -> None:
+        d = self._valida()
+        assert d.plantilla == "dinamica"
+        assert d.fecha_texto == "sábado 31 de octubre"
+
+    def test_una_sola_regla_falla(self) -> None:
+        """Con una regla no es una dinamica."""
+        with pytest.raises(ValidationError):
+            self._valida(reglas=["Solo una"])
+
+    def test_mas_de_cinco_reglas_falla(self) -> None:
+        """Nadie las lee y la pieza desborda."""
+        with pytest.raises(ValidationError):
+            self._valida(reglas=[f"Regla {i}" for i in range(6)])
+
+    def test_sin_premio_falla(self) -> None:
+        from hxq_agent.schemas.piezas import Dinamica
+
+        with pytest.raises(ValidationError):
+            Dinamica(titulo="X", fecha_limite=date(2026, 1, 1), reglas=["a", "b"])
+
+    def test_sin_fecha_limite_falla(self) -> None:
+        from hxq_agent.schemas.piezas import Dinamica
+
+        with pytest.raises(ValidationError):
+            Dinamica(titulo="X", premio="Algo", reglas=["a", "b"])
+
+    def test_horario_vacio_porque_no_aplica(self) -> None:
+        """La plantilla base lo pide igual; una dinamica no tiene horario."""
+        assert self._valida().horario_texto == ""
+
+    def test_los_tipos_siguen_dando_los_acentos(self) -> None:
+        d = self._valida(tipos=["fuego"])
+        assert d.acentos[0] == COLORES_TIPO["fuego"]
