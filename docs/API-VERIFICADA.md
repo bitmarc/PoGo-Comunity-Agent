@@ -109,3 +109,25 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
   replica a la que conectarse.
 - La API tiene rate limit: tras ~6 invocaciones seguidas devuelve `429` con
   `retry-after: 600`.
+
+18. **`CHAINLIT_URL` es obligatoria detras de un proxy que termina TLS.** En Container
+    Apps el TLS termina en el ingress, asi que la app recibe una peticion `http://`
+    interna y construye el `redirect_uri` de OAuth con ese esquema. Google lo compara
+    literalmente con el `https://` registrado y rechaza el login. Chainlit resuelve la URL
+    publica en `get_user_facing_url()`, cuyo docstring dice literalmente "Handles
+    deployment with proxies (like cloud run)": si `CHAINLIT_URL` no esta definida, deja la
+    URL de la peticion tal cual.
+
+    En el Bicep se deriva del dominio del entorno
+    (`https://${prefijo}-agent.${entorno.properties.defaultDomain}`) y no del FQDN de la
+    propia app, que seria una referencia circular. El FQDN de ACA siempre es
+    `<nombre-app>.<defaultDomain>`.
+
+    Sintoma: `redirect_uri_mismatch` en Google aunque el URI registrado parezca correcto.
+    Diagnostico en un comando:
+
+    ```bash
+    curl -s -o /dev/null -w "%{redirect_url}" https://<app>/auth/oauth/google
+    ```
+
+    Si el `redirect_uri` del querystring empieza por `http://`, es esto.

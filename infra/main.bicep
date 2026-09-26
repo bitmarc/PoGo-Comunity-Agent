@@ -268,6 +268,16 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'AZURE_CLIENT_ID'
               value: identidad.properties.clientId
             }
+            // TLS termina en el ingress, asi que la app ve una peticion http:// interna
+            // y construiria el redirect_uri de OAuth con ese esquema. Google lo compara
+            // literalmente contra el https:// registrado y falla con
+            // redirect_uri_mismatch. CHAINLIT_URL le dice cual es la URL publica real.
+            // Se deriva del dominio del entorno y no del FQDN de la app para evitar una
+            // referencia circular: el FQDN de ACA es <nombre-app>.<defaultDomain>.
+            {
+              name: 'CHAINLIT_URL'
+              value: 'https://${prefijo}-agent.${entorno.properties.defaultDomain}'
+            }
             {
               name: 'AZURE_OPENAI_ENDPOINT'
               value: azureOpenAI.properties.endpoint
