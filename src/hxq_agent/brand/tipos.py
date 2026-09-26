@@ -67,11 +67,45 @@ ACENTO_1_POR_DEFECTO = "#22d3ee"
 ACENTO_2_POR_DEFECTO = "#e879f9"
 
 
+def _complemento(color: str) -> str:
+    """Segundo acento que contraste con el dado.
+
+    Se elige entre los dos por defecto el que mas se separe en matiz, para que el titulo
+    siempre tenga dos tonos distinguibles.
+    """
+    candidatos = [ACENTO_2_POR_DEFECTO, ACENTO_1_POR_DEFECTO]
+    return max(candidatos, key=lambda c: _distancia_matiz(color, c))
+
+
+def _distancia_matiz(a: str, b: str) -> float:
+    d = abs(_matiz(a) - _matiz(b))
+    return min(d, 360 - d)
+
+
 def normalizar_tipo(tipo: str) -> str | None:
     """Devuelve el tipo canonico, o None si no se reconoce."""
     clave = tipo.strip().lower()
     clave = _ALIAS.get(clave, clave)
     return clave if clave in COLORES_TIPO else None
+
+
+def _matiz(hex_color: str) -> float:
+    """Matiz en grados (0-360) de un color hex."""
+    import colorsys
+
+    r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
+    return colorsys.rgb_to_hsv(r, g, b)[0] * 360
+
+
+def _contrastan(a: str, b: str, minimo: float = 45.0) -> bool:
+    """True si dos colores estan lo bastante separados en matiz.
+
+    El titulo de estas piezas va en dos tonos, y ese contraste es parte de su firma
+    visual. Hay pares de tipos que dan colores casi identicos (Dragon y Volador son
+    ambos violeta, Roca y Tierra ambos ocre) y la pieza sale monocroma.
+    """
+    d = abs(_matiz(a) - _matiz(b))
+    return min(d, 360 - d) >= minimo
 
 
 def acentos_desde_tipos(tipos: list[str] | None) -> tuple[str, str]:
@@ -88,12 +122,12 @@ def acentos_desde_tipos(tipos: list[str] | None) -> tuple[str, str]:
     colores = [COLORES_TIPO[t] for t in (normalizar_tipo(x) for x in tipos) if t]
 
     if len(colores) >= 2:
-        return colores[0], colores[1]
+        # Dos tipos vecinos en el circulo cromatico dejan el titulo sin contraste
+        # (Rayquaza es Dragon/Volador: los dos violeta). Se conserva el primero, que
+        # es el tipo principal, y el segundo cede ante un tono que si contraste.
+        if _contrastan(colores[0], colores[1]):
+            return colores[0], colores[1]
+        return colores[0], _complemento(colores[0])
     if len(colores) == 1:
-        # Si el unico tipo ya es rosado, el segundo acento seria casi el mismo:
-        # se usa el cian para garantizar contraste entre los dos tonos del titulo.
-        segundo = (
-            ACENTO_1_POR_DEFECTO if colores[0] == COLORES_TIPO["hada"] else ACENTO_2_POR_DEFECTO
-        )
-        return colores[0], segundo
+        return colores[0], _complemento(colores[0])
     return ACENTO_1_POR_DEFECTO, ACENTO_2_POR_DEFECTO

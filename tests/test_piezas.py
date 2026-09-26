@@ -165,3 +165,40 @@ class TestAnuncioEvento:
 def test_el_registro_de_plantillas_coincide_con_los_modelos() -> None:
     for nombre, modelo in PLANTILLAS.items():
         assert modelo.model_fields["plantilla"].default == nombre
+
+
+class TestContrasteEntreAcentos:
+    """El titulo va en dos tonos y ese contraste es parte de la firma visual.
+
+    Hay pares de tipos que dan colores casi identicos (Rayquaza es Dragon/Volador, los
+    dos violeta) y dejarian la pieza monocroma.
+    """
+
+    @pytest.mark.parametrize(
+        "tipos",
+        [
+            ["dragon", "volador"],
+            ["roca", "tierra"],
+            ["planta", "hada"],
+            ["agua", "hielo"],
+            ["fuego"],
+            ["hada"],
+            [],
+            ["inventado"],
+        ],
+    )
+    def test_los_dos_acentos_siempre_contrastan(self, tipos: list[str]) -> None:
+        from hxq_agent.brand.tipos import _distancia_matiz
+
+        a1, a2 = acentos_desde_tipos(tipos)
+        assert a1 != a2
+        assert _distancia_matiz(a1, a2) >= 45, f"{tipos}: {a1} y {a2} se parecen demasiado"
+
+    def test_se_conserva_el_tipo_principal(self) -> None:
+        """Cuando hay que romper el empate, cede el segundo tipo, no el primero."""
+        a1, _ = acentos_desde_tipos(["dragon", "volador"])
+        assert a1 == COLORES_TIPO["dragon"]
+
+    def test_un_par_que_ya_contrasta_no_se_toca(self) -> None:
+        a1, a2 = acentos_desde_tipos(["planta", "hada"])
+        assert (a1, a2) == (COLORES_TIPO["planta"], COLORES_TIPO["hada"])

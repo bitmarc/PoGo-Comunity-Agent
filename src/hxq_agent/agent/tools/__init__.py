@@ -10,13 +10,14 @@ from __future__ import annotations
 
 from agent_framework import FunctionTool
 
+from hxq_agent.agent.tools.calendario import crear_ics
 from hxq_agent.agent.tools.rendering import render_pieza
 from hxq_agent.agent.tools.search import buscar_web
 from hxq_agent.agent.tools.weather import consultar_clima
 
-__all__ = ["buscar_web", "build_tools", "consultar_clima", "render_pieza"]
+__all__ = ["buscar_web", "build_tools", "consultar_clima", "crear_ics", "render_pieza"]
 
 
 def build_tools() -> list[FunctionTool]:
     """Las tools disponibles."""
-    return [buscar_web, consultar_clima, render_pieza]
+    return [buscar_web, consultar_clima, render_pieza, crear_ics]

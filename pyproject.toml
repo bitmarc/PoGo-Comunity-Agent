@@ -15,6 +15,7 @@ dependencies = [
     "azure-monitor-opentelemetry-exporter>=1.0.0b57",
     "jinja2>=3.1.6",
     "playwright>=1.63.0",
+    "icalendar>=7.3.0",
 ]
 
 [project.optional-dependencies]

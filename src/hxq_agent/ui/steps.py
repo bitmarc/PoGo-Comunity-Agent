@@ -28,22 +28,23 @@ _ETIQUETAS: dict[str, str] = {
     "buscar_web": "Buscando en la web",
     "consultar_clima": "Consultando el clima",
     "render_pieza": "Dibujando la pieza",
+    "crear_ics": "Preparando el calendario",
 }
 
 _MAX_SALIDA = 4000
 
-# Rutas de PNG en la salida de una tool, en formato Windows o POSIX.
-_PATRON_PNG = re.compile(r"(?:[A-Za-z]:)?[\\/][^\s\n]*?\.png")
+# Rutas de archivos generados en la salida de una tool, en formato Windows o POSIX.
+_PATRON_ARCHIVO = re.compile(r"(?:[A-Za-z]:)?[\\/][^\s\n]*?\.(?:png|ics)")
 
 
-def rutas_png(texto: str) -> list[Path]:
-    """Rutas de PNG existentes mencionadas en la salida de una tool.
+def rutas_generadas(texto: str) -> list[Path]:
+    """Archivos existentes mencionados en la salida de una tool.
 
-    Se comprueba que el archivo exista: el modelo a veces repite una ruta en su propio
-    texto, y mostrar dos veces la misma imagen confunde.
+    Se comprueba que existan: el modelo a veces repite una ruta en su propio texto, y
+    mostrar dos veces la misma imagen confunde.
     """
     vistas: list[Path] = []
-    for bruto in _PATRON_PNG.findall(texto):
+    for bruto in _PATRON_ARCHIVO.findall(texto):
         ruta = Path(bruto.strip().rstrip(".,"))
         if ruta.is_file() and ruta not in vistas:
             vistas.append(ruta)
@@ -74,7 +75,7 @@ async def mostrar_tools_en_ui(context: FunctionInvocationContext, call_next: Any
 
             resultado = getattr(context, "result", None)
             texto = "" if resultado is None else str(resultado)
-            imagenes = rutas_png(texto)
+            generados = rutas_generadas(texto)
 
             if len(texto) > _MAX_SALIDA:
                 texto = texto[:_MAX_SALIDA] + "\n\n[...truncado]"
@@ -85,7 +86,11 @@ async def mostrar_tools_en_ui(context: FunctionInvocationContext, call_next: Any
         await call_next()
         return
 
-    # Fuera del `Step`: una imagen dentro de un paso colapsado se queda oculta, y la
-    # pieza es justo lo que el admin tiene que mirar.
-    for ruta in imagenes:
-        await cl.Message(content="", elements=[cl.Image(path=str(ruta), size="large")]).send()
+    # Fuera del `Step`: lo que va dentro de un paso colapsado se queda oculto, y la
+    # pieza y el calendario son justo lo que el admin tiene que ver y descargar.
+    for ruta in generados:
+        if ruta.suffix == ".png":
+            elemento = cl.Image(path=str(ruta), size="large", name=ruta.name)
+        else:
+            elemento = cl.File(path=str(ruta), name=ruta.name, display="inline")
+        await cl.Message(content="", elements=[elemento]).send()
