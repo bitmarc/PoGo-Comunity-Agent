@@ -1,0 +1,318 @@
+/* Sistema de diseño de HuixquiGo.
+ *
+ * Extraido de las infografias ya publicadas, no inventado: fondo oscuro, texto y
+ * bordes con resplandor neon, tarjetas redondeadas con la etiqueta montada sobre el
+ * borde superior, y el lockup de la comunidad al pie.
+ *
+ * Los acentos NO son fijos: cambian segun los tipos del Pokemon o el tema de la pieza,
+ * igual que en las piezas originales (Cottonee Planta/Hada -> verde y rosa; Deino
+ * Siniestro/Dragon -> morado y azul). Se inyectan como --acento-1 y --acento-2.
+ *
+ * La paleta del logo se reserva para el lockup del pie: mezclarla con el neon rompe
+ * la coherencia con lo que ya se publica.
+ */
+
+@font-face {
+  font-family: "Baloo 2";
+  src: url("fonts/Baloo2.ttf") format("truetype-variations");
+  font-weight: 400 800;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito.ttf") format("truetype-variations");
+  font-weight: 200 1000;
+  font-display: block;
+}
+
+:root {
+  /* --- Marca (solo para el lockup del pie) --- */
+  --marca-salmon: #f27983;
+  --marca-rojo: #d90b31;
+  --marca-teal: #0388a6;
+  --marca-verde: #308c3e;
+  --marca-negro: #0d0d0d;
+
+  /* --- Acentos: los sobrescribe cada pieza --- */
+  --acento-1: #22d3ee; /* cian, el mas usado en los titulos */
+  --acento-2: #e879f9; /* magenta, el segundo tono del titulo */
+
+  /* --- Fondo --- */
+  --fondo-base: #0b0616;
+  --fondo-profundo: #050308;
+  --superficie: rgba(8, 4, 20, 0.55);
+
+  /* --- Texto --- */
+  --texto: #f5f3ff;
+  --texto-tenue: #c4b5fd;
+
+  /* --- Geometria --- */
+  --radio-tarjeta: 22px;
+  --radio-pildora: 999px;
+  --borde-neon: 2.5px;
+  --gutter: 42px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Resplandor neon
+ *
+ * El efecto real son varias capas: un halo amplio y tenue, uno medio y un nucleo
+ * casi blanco. Una sola sombra se ve plana y delata que es generado.
+ * ------------------------------------------------------------------ */
+
+.neon-texto {
+  color: #fff;
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.95),
+    0 0 10px var(--glow, var(--acento-1)),
+    0 0 22px var(--glow, var(--acento-1)),
+    0 0 44px var(--glow, var(--acento-1)),
+    0 0 80px color-mix(in srgb, var(--glow, var(--acento-1)) 55%, transparent);
+}
+
+/* Variante con el color saturado en vez de blanco: para subtitulos y etiquetas,
+ * donde el nucleo blanco resta jerarquia al titulo. */
+.neon-texto--color {
+  color: var(--glow, var(--acento-1));
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--glow, var(--acento-1)) 80%, transparent),
+    0 0 18px color-mix(in srgb, var(--glow, var(--acento-1)) 60%, transparent),
+    0 0 36px color-mix(in srgb, var(--glow, var(--acento-1)) 35%, transparent);
+}
+
+.neon-borde {
+  border: var(--borde-neon) solid var(--glow, var(--acento-1));
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--glow, var(--acento-1)) 70%, transparent),
+    0 0 18px color-mix(in srgb, var(--glow, var(--acento-1)) 45%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--glow, var(--acento-1)) 18%, transparent);
+}
+
+/* ------------------------------------------------------------------ *
+ * Lienzo
+ * ------------------------------------------------------------------ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Nunito", system-ui, sans-serif;
+  color: var(--texto);
+  background: var(--fondo-profundo);
+  /* Sin antialiasing subpixel: en una captura headless produce franjas de color
+   * en los bordes del texto con resplandor. */
+  -webkit-font-smoothing: antialiased;
+}
+
+.lienzo {
+  width: var(--ancho, 1240px);
+  height: var(--alto, 1240px);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gutter);
+  background:
+    radial-gradient(
+      ellipse 85% 55% at 50% -5%,
+      color-mix(in srgb, var(--acento-1) 40%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 75% 55% at 12% 100%,
+      color-mix(in srgb, var(--acento-2) 34%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 60% 45% at 95% 72%,
+      color-mix(in srgb, var(--acento-1) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(ellipse 130% 90% at 50% 45%, #241147, #120a26 55%, var(--fondo-base) 80%),
+    var(--fondo-profundo);
+}
+
+/* Estrellas: un patron fijo, no aleatorio, para que la misma pieza salga identica
+ * cada vez que se regenera. Un fondo que cambia entre generaciones hace imposible
+ * comparar dos versiones de un mismo aviso. */
+.lienzo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 78% 9%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 33% 72%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 91% 61%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 57% 34%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 22% 88%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 68% 94%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 6% 47%, rgba(255, 255, 255, 0.3), transparent);
+  pointer-events: none;
+}
+
+/* Burbujas del fondo, como en la pieza de Deino. */
+.burbuja {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(1px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Titulo
+ * ------------------------------------------------------------------ */
+
+.titulo {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  line-height: 0.98;
+  text-align: center;
+  letter-spacing: -0.01em;
+  /* Escala con el largo del texto: un titulo de 60 caracteres no puede usar el
+   * mismo cuerpo que uno de 15 sin desbordar. La plantilla fija --escala-titulo. */
+  font-size: var(--escala-titulo, 92px);
+}
+
+.subtitulo {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 700;
+  font-size: var(--escala-subtitulo, 46px);
+  text-align: center;
+  line-height: 1.05;
+  margin-top: 6px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Arte central
+ *
+ * El anillo luminoso detras del sujeto sale de la pieza de Deino y es lo que
+ * integra una ilustracion recortada con el fondo, en vez de dejarla flotando.
+ * ------------------------------------------------------------------ */
+
+.hero {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 140px;
+  max-height: var(--alto-hero, 420px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  aspect-ratio: 1;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--acento-1) 32%, transparent) 0%,
+    color-mix(in srgb, var(--acento-2) 20%, transparent) 45%,
+    transparent 68%
+  );
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  aspect-ratio: 1;
+  height: 82%;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--acento-1) 75%, transparent);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--acento-1) 60%, transparent),
+    inset 0 0 26px color-mix(in srgb, var(--acento-2) 35%, transparent);
+}
+
+.hero__img {
+  position: relative;
+  height: 100%;
+  max-width: 100%;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--acento-2) 55%, transparent));
+}
+
+/* ------------------------------------------------------------------ *
+ * Tarjetas
+ * ------------------------------------------------------------------ */
+
+.tarjeta {
+  position: relative;
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  padding: 26px 24px 22px;
+}
+
+/* La etiqueta montada sobre el borde superior, como en "BONUS" o
+ * "MEJORES CONTRAATAQUES". Es la firma visual de estas piezas. */
+.tarjeta__etiqueta {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  padding: 0 16px;
+  background: var(--fondo-base);
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 700;
+  font-size: 27px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pildora {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radio-pildora);
+  padding: 10px 24px;
+  background: var(--superficie);
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------ *
+ * Pie con el lockup de la comunidad
+ * ------------------------------------------------------------------ */
+
+/* El cuerpo se estira y se centra entre el titulo y el pie. Sin esto el contenido
+ * se apelmaza arriba y queda medio lienzo vacio. */
+.cuerpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 44px;
+}
+
+.pie {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.pie__logo {
+  height: 96px;
+  width: auto;
+}
+
+.pie__nombre {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 700;
+  font-size: 42px;
+  /* Aqui si se usa la paleta de marca: es el unico punto de la pieza donde el
+   * neon cede ante la identidad del logo. */
+  color: var(--marca-salmon);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--marca-rojo) 60%, transparent);
+}

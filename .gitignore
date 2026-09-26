@@ -38,3 +38,6 @@ client_secret_*.json
 
 # Parametros de despliegue: llevan secretos. Solo el .example va al repo.
 infra/main.parameters.json
+
+# Arte generado: se regenera, no va al repo
+src/hxq_agent/brand/cache_arte/

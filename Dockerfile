@@ -39,17 +39,25 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends tzdata ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# FASE 3: para renderizar las piezas graficas hara falta chromium. Cuando toque,
-# cambiar la base por mcr.microsoft.com/playwright/python o anadir aqui:
-#   RUN uv run playwright install --with-deps chromium-headless-shell
-# Se deja fuera a proposito: ~1 GB de imagen y varios segundos de cold start que
-# todavia no compran nada.
+# Chromium para renderizar las piezas graficas.
+#
+# chromium-headless-shell y no chromium completo: ~120 MB en vez de ~400 MB, y no hace
+# falta nada de lo que aporta el navegador entero para tomar una captura.
+#
+# PLAYWRIGHT_BROWSERS_PATH fuera de $HOME para que el binario lo instale root una sola
+# vez y el usuario sin privilegios pueda ejecutarlo. Con la ruta por defecto
+# (~/.cache/ms-playwright) el usuario hxq no lo encontraria.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
 # Usuario sin privilegios. El contenedor no necesita root para nada.
 RUN useradd --create-home --uid 10001 hxq
 WORKDIR /app
 
 COPY --from=builder --chown=hxq:hxq /app/.venv /app/.venv
+
+# Con --with-deps para que apt instale las librerias de sistema que pide chromium
+# (fuentes, libnss, libdrm...). Sin ellas el binario existe pero no arranca.
+RUN /app/.venv/bin/python -m playwright install --with-deps chromium-headless-shell     && rm -rf /var/lib/apt/lists/*     && chmod -R a+rX /opt/playwright
 COPY --chown=hxq:hxq src ./src
 COPY --chown=hxq:hxq .chainlit ./.chainlit
 COPY --chown=hxq:hxq chainlit.md ./

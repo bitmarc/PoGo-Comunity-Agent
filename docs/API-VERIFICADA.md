@@ -176,3 +176,40 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
     az rest --method GET --url "https://graph.microsoft.com/v1.0/policies/authorizationPolicy" \
       --query "defaultUserRolePermissions.allowedToCreateApps"
     ```
+
+## Fase 3: piezas graficas
+
+23. **Azure bloquea generar imagenes de Pokemon.** `gpt-image-2` rechaza el prompt con
+    `moderation_blocked` en la etapa de **output**, categoria `other`. Comprobado de
+    forma aislada: la misma escena con y sin la palabra "Pokemon" da 400 y 200
+    respectivamente. Es filtrado de propiedad intelectual, no de contenido sensible.
+
+    Consecuencia de diseno: el arte generado sirve para ambiente (escenas, paisajes,
+    grupos de personas), no para el Pokemon protagonista. Para eso el camino es el arte
+    oficial, que es justo lo que usan las piezas publicadas.
+
+24. **El endpoint de imagenes tambien es la superficie v1.** `AsyncAzureOpenAI` arma
+    `/openai/deployments/<nombre>/images/generations` y responde 404. Lo que funciona es
+    `AsyncOpenAI` con `base_url = <endpoint>/openai/v1/`, igual que el chat. Con API key
+    hay que mandar la cabecera `api-key`, porque la SDK manda `Authorization: Bearer`.
+
+25. **La API sincrona de Playwright no arranca dentro de un bucle asyncio**: "It looks
+    like you are using Playwright Sync API inside the asyncio loop". Como las tools del
+    agente son async, el motor usa `async_playwright` y expone un envoltorio sincrono
+    para scripts y tests.
+
+26. **Las rutas relativas del HTML se resuelven contra el archivo, no contra el paquete.**
+    El HTML temporal tiene que escribirse en el mismo directorio que las plantillas o los
+    `../tokens.css` apuntan fuera. El sintoma es desconcertante: la pieza sale en blanco
+    con texto invisible, porque solo sobrevive el `<style>` inline y este deja
+    `color: #fff` sobre el fondo blanco por defecto.
+
+27. **Un hijo flex no baja de su tamano de contenido sin `min-height: 0`.** Con una altura
+    fija en el arte central, una pieza con muchos detalles empujaba el pie fuera del
+    lienzo y la captura lo recortaba. El arte ahora es `flex: 1 1 auto` con
+    `min-height: 0` en el contenedor: absorbe el espacio libre y cede cuando los datos
+    ocupan mas.
+
+28. **`document.fonts.ready` antes de capturar.** Las fuentes cargan de forma asincrona;
+    sin esperarlas la captura sale con la fuente del sistema y el texto ocupa otro ancho,
+    asi que los cortes de linea no coinciden con lo que se ve en el navegador.

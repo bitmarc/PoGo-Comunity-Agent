@@ -1,0 +1,79 @@
+{# Quedada: lugar, fecha y hora en grande, porque son los tres datos por los que la
+   gente mira la pieza. Todo lo demas es secundario. #}
+{% extends "base.html.j2" %}
+
+{% block estilos %}
+  .datos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+  .dato {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 214px;
+    text-align: center;
+  }
+  .dato__etiqueta {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 27px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+  .dato__valor {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 800;
+    font-size: 55px;
+    line-height: 1.05;
+    color: #fff;
+  }
+  /* El lugar suele ser el texto mas largo de la pieza, asi que ocupa el ancho
+     completo y usa un cuerpo algo menor. */
+  .dato--ancho { grid-column: 1 / -1; min-height: 190px; }
+  .dato--ancho .dato__valor { font-size: 48px; }
+
+  .detalles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+  }
+  .detalle { font-size: 30px; padding: 14px 28px; }
+{% endblock %}
+
+{% block cuerpo %}
+<section class="datos">
+
+  <div class="dato tarjeta neon-borde" style="--glow: var(--acento-1)">
+    <span class="dato__etiqueta neon-texto--color" style="--glow: var(--acento-1)">Cuando</span>
+    <span class="dato__valor">{{ fecha_texto }}</span>
+  </div>
+
+  <div class="dato tarjeta neon-borde" style="--glow: var(--acento-2)">
+    <span class="dato__etiqueta neon-texto--color" style="--glow: var(--acento-2)">Hora</span>
+    <span class="dato__valor">{{ horario_texto }}</span>
+  </div>
+
+  <div class="dato dato--ancho tarjeta neon-borde" style="--glow: var(--acento-1)">
+    <span class="dato__etiqueta neon-texto--color" style="--glow: var(--acento-1)">Donde</span>
+    <span class="dato__valor">{{ lugar }}</span>
+  </div>
+
+</section>
+
+{% if detalles %}
+<section class="detalles">
+  {% for detalle in detalles %}
+  <span class="detalle pildora neon-borde"
+        style="--glow: {{ 'var(--acento-2)' if loop.index0 % 2 else 'var(--acento-1)' }}">
+    {{ detalle }}
+  </span>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,76 @@
+{# Anuncio de evento oficial: fecha y horario arriba, y los bonus en tarjetas, que
+   es lo que la gente busca de un vistazo. Replica la seccion "Bonus" de las piezas
+   existentes, con la etiqueta montada sobre el borde de la tarjeta. #}
+{% extends "base.html.j2" %}
+
+{% block estilos %}
+  .cuando {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .cuando__item {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    padding: 16px 36px;
+  }
+
+  .bonus {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .bonus__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .bonus__item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 35px;
+    line-height: 1.25;
+  }
+  /* Vineta redonda en vez de un bullet de lista: los bullets por defecto se ven
+     fuera de lugar junto al neon. */
+  .bonus__vineta {
+    flex: 0 0 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--glow, var(--acento-1));
+    box-shadow: 0 0 10px var(--glow, var(--acento-1));
+  }
+{% endblock %}
+
+{% block cuerpo %}
+<section class="cuando">
+  <span class="cuando__item pildora neon-borde" style="--glow: var(--acento-1)">
+    {{ fecha_texto }}
+  </span>
+  <span class="cuando__item pildora neon-borde" style="--glow: var(--acento-2)">
+    {{ horario_texto }}
+  </span>
+</section>
+
+{% if bonus %}
+<section class="bonus">
+  <div class="tarjeta neon-borde" style="--glow: var(--acento-2); padding-top: 38px">
+    <span class="tarjeta__etiqueta neon-texto--color" style="--glow: var(--acento-2)">
+      Bonus del evento
+    </span>
+    <div class="bonus__lista">
+      {% for item in bonus %}
+      <div class="bonus__item">
+        <span class="bonus__vineta"
+              style="--glow: {{ 'var(--acento-1)' if loop.index0 % 2 else 'var(--acento-2)' }}"></span>
+        <span>{{ item }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

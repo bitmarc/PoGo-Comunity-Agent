@@ -1,0 +1,57 @@
+{# Chrome comun a todas las piezas: lienzo, fondo, titulo y pie.
+   Cada plantilla concreta solo rellena el bloque `cuerpo`. #}
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  .lienzo {
+    --ancho: {{ ancho }}px;
+    --alto: {{ alto }}px;
+    --acento-1: {{ acento_1 }};
+    --acento-2: {{ acento_2 }};
+    --escala-titulo: {{ escala_titulo }}px;
+    --escala-subtitulo: {{ escala_subtitulo }}px;
+  }
+  {% block estilos %}{% endblock %}
+</style>
+</head>
+<body>
+<div class="lienzo">
+
+  {# Burbujas del fondo, en posiciones fijas para que la pieza sea reproducible. #}
+  <div class="burbuja" style="width:260px;height:260px;top:-90px;left:-70px;
+       background:radial-gradient(circle at 35% 35%,
+         color-mix(in srgb, var(--acento-2) 45%, transparent), transparent 70%)"></div>
+  <div class="burbuja" style="width:180px;height:180px;bottom:120px;right:-60px;
+       background:radial-gradient(circle at 40% 40%,
+         color-mix(in srgb, var(--acento-1) 40%, transparent), transparent 70%)"></div>
+  <div class="burbuja" style="width:110px;height:110px;top:38%;left:-40px;
+       background:radial-gradient(circle at 40% 40%,
+         color-mix(in srgb, var(--acento-2) 35%, transparent), transparent 70%)"></div>
+
+  <header>
+    <h1 class="titulo neon-texto" style="--glow: var(--acento-1)">{{ titulo }}</h1>
+    {% if subtitulo %}
+    <p class="subtitulo neon-texto" style="--glow: var(--acento-2)">{{ subtitulo }}</p>
+    {% endif %}
+  </header>
+
+  <main class="cuerpo">
+    {% if imagen_hero %}
+    <div class="hero">
+      <img class="hero__img" src="{{ imagen_hero }}" alt="">
+    </div>
+    {% endif %}
+    {% block cuerpo %}{% endblock %}
+  </main>
+
+  <footer class="pie">
+    <img class="pie__logo" src="../assets/logo_hxq_transparente.png" alt="">
+    <span class="pie__nombre">HuixquiGo</span>
+  </footer>
+
+</div>
+</body>
+</html>
