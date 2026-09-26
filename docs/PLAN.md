@@ -5,9 +5,12 @@
 > **URL:** https://hxq-agent.whitefield-f29520c3.westus3.azurecontainerapps.io
 > **Última actualización:** 26 de septiembre de 2026
 >
-> El agente está desplegado, con login por Google e historial persistente verificado
-> por el usuario. Siguiente: Fase 3 (motor de piezas gráficas), bloqueada por los
-> assets de branding.
+> El agente está desplegado y en uso. Genera el paquete completo de una quedada (copy
+> por canal, pieza con branding y archivo de calendario), anuncios de evento y dinámicas,
+> y archiva en la biblioteca lo que el admin aprueba.
+>
+> Siguiente candidata: **Fase 4.5**, las infografías de evento oficial con datos de
+> Pokébattler. El refactor multi-agente queda aplazado por falta de evidencia.
 >
 > ### Lo que cambió respecto a lo planificado
 >
@@ -28,9 +31,8 @@
 > - Imagen bajada de GHCR privado con un PAT de solo `read:packages`
 > - Telemetría hacia Application Insights, sin exportar prompts
 >
-> **Pendiente de verificar:** el round-trip del SAS de Blob. Sus prerrequisitos están
-> confirmados y sus tests unitarios pasan, pero la firma real se ejercitará en la Fase 3,
-> cuando haya imágenes que subir. Hoy nada depende de ella.
+> - **Blob con Managed Identity, verificado end-to-end** (26/09): upload correcto y
+>   user delegation SAS firmado y descargado con 200. Sin ninguna clave de larga vida.
 >
 > ### Deuda conocida
 >
@@ -179,7 +181,7 @@ Es la parte técnicamente más difícil y la que define si el producto se usa o 
 
 **Verificación:** generar la misma quedada 5 veces seguidas y comprobar que fecha, hora y lugar salen idénticos y correctos, y que el branding no varía entre generaciones. Comparar una pieza con una hecha a mano en Canva y que un admin diga cuál prefiere.
 
-### Fase 4 — Paquete de quedada completo *(tu prioridad #1)* ⬅️ SIGUIENTE
+### Fase 4 — Paquete de quedada completo *(tu prioridad #1)* ✅ COMPLETADA
 
 El flujo de mayor retorno: `uso.txt` #2 + #3 + #5 resueltos de un tirón.
 
@@ -212,7 +214,20 @@ sus movimientos, PC de jefe, megas y notas. Fuentes verificadas en vivo y docume
   MAF soporta de forma nativa con `MCPStreamableHTTPTool`.
 - Requisito de diseño: la plantilla debe llevar la atribución a Pokébattler.
 
-### Fase 5 — Multi-agente y dinámicas
+### Fase 5 — Biblioteca y dinámicas ✅ COMPLETADA *(reordenada)*
+
+Se ejecutó distinta a lo planificado, y conviene que conste por qué:
+
+- **El refactor multi-agente se aplazó.** No hay evidencia que lo justifique: el system
+  prompt son ~1.720 tokens en 8 secciones que no se contradicen, más ~1.040 de esquemas
+  de tools. El propio plan decía *"no pagar complejidad multi-agente antes de que el
+  prompt duela"*. Se revisará cuando aparezcan síntomas reales: el modelo eligiendo la
+  tool equivocada, o instrucciones de tareas distintas que se estorben.
+- **En su lugar se cerró el hueco de la Fase 4** (aprobar → Blob + tabla `pieza`), que
+  además era lo que bloqueaba `buscar_en_biblioteca`.
+- Dinámicas y concursos entregados como estaba previsto.
+
+### Fase 5 original — Multi-agente *(pendiente, sin fecha)*
 
 - Refactor de `factory.py` a `HandoffBuilder(participants=[triage, contenido, diseno, eventos, research]).with_start_agent(triage).add_handoff(triage, [...]).build()`. Las tools no cambian; solo se reparten.
 - Tool de dinámicas y concursos (`uso.txt` #6): reglas, premios, criterios de desempate, duración.
