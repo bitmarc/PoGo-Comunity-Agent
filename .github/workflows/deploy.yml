@@ -51,6 +51,19 @@ jobs:
           uv run ruff check src tests
           uv run ruff format --check src tests
 
+      # Los tests de render lanzan Chromium de verdad. Son los que cazan el fallo de
+      # "la pieza sale en blanco" (CSS o fuentes que no cargan), asi que merecen correr
+      # en CI aunque tarden unos segundos mas.
+      - name: Cachear Chromium
+        id: cache-chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+
+      - name: Instalar Chromium
+        run: uv run playwright install --with-deps chromium-headless-shell
+
       - name: Tests
         run: uv run pytest -q
 
