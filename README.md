@@ -5,6 +5,9 @@ Agente copiloto de comunicacion para los administradores de una comunidad local 
 branding de la comunidad y archivo de calendario.
 
 Stack: Microsoft Agent Framework 1.x + Chainlit, desplegado en Azure Container Apps.
+
+**En produccion:** https://hxq-agent.whitefield-f29520c3.westus3.azurecontainerapps.io
+(acceso restringido por allowlist de correos).
 Plan completo por fases en [`docs/PLAN.md`](docs/PLAN.md).
 Superficie de API verificada (y las trampas) en [`docs/API-VERIFICADA.md`](docs/API-VERIFICADA.md).
 

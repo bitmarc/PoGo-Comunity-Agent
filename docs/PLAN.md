@@ -1,5 +1,46 @@
 # HXQ Agent — PRD y plan de implementación por fases
 
+> ## Estado: Fases 0, 1 y 2 completadas y en producción
+>
+> **URL:** https://hxq-agent.whitefield-f29520c3.westus3.azurecontainerapps.io
+> **Última actualización:** 26 de septiembre de 2026
+>
+> El agente está desplegado, con login por Google e historial persistente verificado
+> por el usuario. Siguiente: Fase 3 (motor de piezas gráficas), bloqueada por los
+> assets de branding.
+>
+> ### Lo que cambió respecto a lo planificado
+>
+> | Supuesto del plan | Realidad |
+> |---|---|
+> | `ChatAgent`, `AzureOpenAIChatClient`, `AgentThread`, `run_stream()` | La API real de MAF 1.19 es `Agent`, `OpenAIChatClient(azure_endpoint=...)`, `AgentSession`, `run(stream=True)`. Ver `API-VERIFICADA.md` |
+> | Modelo de imagen `gpt-image-1.5` | El deployment real es `gpt-image-2` |
+> | Región del despliegue sin decidir | `westus3`, para coincidir con el recurso de Azure OpenAI |
+> | Dockerfile con Playwright desde la Fase 2 | Aplazado a la Fase 3: ~1 GB de imagen y varios segundos de cold start que todavía no compran nada. La imagen actual pesa 327 MB |
+> | CI/CD "un push redespliega solo" | Los jobs `test` y `build` funcionan; `deploy` está **bloqueado**: la cuenta de Azure es invitada en el tenant (`#EXT#`) y no puede crear la app registration que necesita OIDC. Los despliegues se hacen a mano por ahora |
+>
+> ### Verificado en producción, dentro de Azure
+>
+> - Managed Identity → Azure OpenAI: el modelo responde sin ninguna API key
+> - Data layer → Neon: escritura desde el contenedor desplegado
+> - Login con Google + historial persistente entre recargas (confirmado por el usuario)
+> - Los tres roles concedidos, incluido `Storage Blob Delegator`
+> - Imagen bajada de GHCR privado con un PAT de solo `read:packages`
+> - Telemetría hacia Application Insights, sin exportar prompts
+>
+> **Pendiente de verificar:** el round-trip del SAS de Blob. Sus prerrequisitos están
+> confirmados y sus tests unitarios pasan, pero la firma real se ejercitará en la Fase 3,
+> cuando haya imágenes que subir. Hoy nada depende de ella.
+>
+> ### Deuda conocida
+>
+> 1. **CI/CD sin desplegar** (permisos de tenant). Alternativas: pedir permisos, o un
+>    script de despliegue local.
+> 2. **Credenciales que pasaron por un chat**: la contraseña de Neon y el PAT de GitHub
+>    conviene rotarlas. Tras rotarlas basta con actualizar los secretos de la Container App.
+> 3. **`maxReplicas: 1`** porque Chainlit guarda estado de sesión en memoria. Suficiente
+>    para 2-5 admins; escalar exigiría sacar ese estado del proceso.
+
 ## Context
 
 Una comunidad local de jugadores de Pokémon GO en México se administra hoy a mano: cada quedada, evento o aviso exige redactar el copy tres veces (Campfire, WhatsApp, Instagram), diseñar una pieza gráfica en Canva desde cero, y buscar a mano las fechas y bonus oficiales del evento. Los 2-5 administradores repiten ese ciclo varias veces por semana y el resultado es inconsistente en branding y ocasionalmente incorrecto en datos.
@@ -96,7 +137,7 @@ hxq-agent/
 
 ## 3. Fases
 
-### Fase 0 — Cimientos locales
+### Fase 0 — Cimientos locales ✅ COMPLETADA
 
 - Scaffold con `uv`, Python 3.13, `pyproject.toml`. Dependencias: `agent-framework`, `chainlit`, `pydantic-settings`, `httpx`, `jinja2`, `playwright`, `icalendar`, `sqlalchemy[asyncio]`, `asyncpg`.
 - **Primer paso obligatorio:** `uv add agent-framework` y verificar los import paths reales contra la versión instalada (ver `docs/API-VERIFICADA.md`). MAF 1.0 es GA pero la superficie de `agent_framework_orchestrations` y Agent Harness es reciente — confirmar, no asumir.
@@ -106,7 +147,7 @@ hxq-agent/
 
 **Verificación:** `chainlit run src/hxq_agent/app.py -w`; login con tu Gmail funciona, un correo fuera de la allowlist es rechazado, la respuesta llega en streaming.
 
-### Fase 1 — Agente conversacional con búsqueda web *(el alcance que pediste "de momento")*
+### Fase 1 — Agente conversacional con búsqueda web ✅ COMPLETADA
 
 - `buscar_web(query, ambito)` sobre Tavily con dos modos: `ambito="oficial"` restringe a `pokemongolive.com`, `leekduck.com`, `serebii.net` vía `include_domains`; `ambito="abierto"` busca libre.
 - `consultar_clima(lugar, fecha)` sobre Open-Meteo, para logística de quedadas.
@@ -115,7 +156,7 @@ hxq-agent/
 
 **Verificación:** preguntar "¿qué hay para el próximo Community Day?" y comprobar que la respuesta cita una fuente oficial real y no inventa la fecha. Preguntar por un evento inexistente y comprobar que dice que no encontró nada.
 
-### Fase 2 — Persistencia y despliegue en Azure
+### Fase 2 — Persistencia y despliegue en Azure ✅ COMPLETADA (CI/CD parcial)
 
 - Proyecto Neon (free tier) → `DATABASE_URL` → data layer oficial de Chainlit. Aplicar el esquema oficial de Chainlit + tabla `pieza` de la biblioteca.
 - Azure Blob Storage como storage provider de elements.
@@ -128,7 +169,7 @@ hxq-agent/
 
 **Verificación:** URL pública responde, login con Google funciona con el redirect URI de producción, una conversación de ayer sigue en el historial tras recargar, un `git push` a main redespliega solo.
 
-### Fase 3 — Motor de piezas gráficas
+### Fase 3 — Motor de piezas gráficas ⬅️ SIGUIENTE (bloqueada: faltan los assets de branding)
 
 Es la parte técnicamente más difícil y la que define si el producto se usa o no.
 
