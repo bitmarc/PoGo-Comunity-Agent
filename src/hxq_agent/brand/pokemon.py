@@ -32,7 +32,11 @@ ARTE = (
 UA = "hxq-agent (comunidad HuixquiGo)"
 _TIMEOUT = httpx.Timeout(20.0, connect=10.0)
 
-DIR_CACHE = Path(__file__).parent / "cache_pokemon"
+
+def _dir_cache() -> Path:
+    from hxq_agent.config import get_settings
+
+    return get_settings().subdir("cache_pokemon")
 
 
 class PokemonNoEncontrado(LookupError):
@@ -66,9 +70,9 @@ async def obtener_pokemon(nombre: str, *, usar_cache: bool = True) -> dict[str, 
     if not clave:
         raise PokemonNoEncontrado("Nombre vacio.")
 
-    DIR_CACHE.mkdir(exist_ok=True)
-    meta_cache = DIR_CACHE / f"{clave}.json"
-    arte_cache = DIR_CACHE / f"{clave}.png"
+    cache = _dir_cache()
+    meta_cache = cache / f"{clave}.json"
+    arte_cache = cache / f"{clave}.png"
 
     if usar_cache and meta_cache.exists() and arte_cache.exists():
         datos = json.loads(meta_cache.read_text(encoding="utf-8"))

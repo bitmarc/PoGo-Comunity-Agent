@@ -23,13 +23,17 @@ from pydantic import Field, ValidationError
 from hxq_agent.brand.arte import ArteError, como_data_uri, generar_arte
 from hxq_agent.brand.pokemon import PokemonNoEncontrado, obtener_pokemon
 from hxq_agent.brand.render import renderizar
+from hxq_agent.config import get_settings
 from hxq_agent.schemas.piezas import PLANTILLAS
 
 logger = logging.getLogger(__name__)
 
+
 # Las piezas se escriben aqui y la UI las recoge. En Fase 4 pasan a Blob Storage al
 # aprobarse; mientras tanto viven el tiempo que viva el contenedor.
-DIR_SALIDA = Path.cwd() / "out" / "piezas"
+# Ruta resuelta al vuelo, no al importar: depende de la configuracion.
+def _dir_salida() -> Path:
+    return get_settings().subdir("piezas")
 
 
 def _contexto(pieza: Any) -> dict[str, Any]:
@@ -174,8 +178,7 @@ async def render_pieza(
         logger.exception("Fallo el render de la pieza")
         return f"No se pudo dibujar la pieza: {exc}"
 
-    DIR_SALIDA.mkdir(parents=True, exist_ok=True)
-    destino = DIR_SALIDA / f"{plantilla}_{uuid.uuid4().hex[:8]}.png"
+    destino = _dir_salida() / f"{plantilla}_{uuid.uuid4().hex[:8]}.png"
     destino.write_bytes(png)
     logger.info("Pieza generada: %s (%d KB)", destino.name, len(png) // 1024)
 

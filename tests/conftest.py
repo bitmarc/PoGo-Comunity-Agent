@@ -40,6 +40,12 @@ def _entorno_aislado(monkeypatch: pytest.MonkeyPatch) -> None:
         if nombre.upper().startswith(_PREFIJOS_PROPIOS):
             monkeypatch.delenv(nombre, raising=False)
 
+    # `get_settings` cachea por proceso: sin limpiarla, un test que cambia el entorno
+    # seguiria viendo la configuracion del anterior.
+    from hxq_agent.config import get_settings
+
+    get_settings.cache_clear()
+
 
 class FakeChatClient:
     """Cliente de chat que devuelve un texto fijo, troceado como si fuera streaming."""

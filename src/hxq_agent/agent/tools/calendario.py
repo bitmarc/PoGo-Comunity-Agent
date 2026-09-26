@@ -26,7 +26,10 @@ from hxq_agent.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-DIR_SALIDA = Path.cwd() / "out" / "calendario"
+
+def _dir_salida() -> Path:
+    return get_settings().subdir("calendario")
+
 
 # Duracion por defecto cuando no se da hora de fin. Dos horas es lo que suele durar una
 # quedada; dejarlo sin fin hace que algunos calendarios lo muestren como evento de dia
@@ -144,8 +147,7 @@ async def crear_ics(
         titulo=titulo, lugar=lugar, inicio=inicio, fin=fin, descripcion=descripcion
     )
 
-    DIR_SALIDA.mkdir(parents=True, exist_ok=True)
-    destino = DIR_SALIDA / f"{nombre_archivo(titulo)}-{dia.isoformat()}.ics"
+    destino = _dir_salida() / f"{nombre_archivo(titulo)}-{dia.isoformat()}.ics"
     destino.write_bytes(contenido)
     logger.info("ICS generado: %s", destino.name)
 

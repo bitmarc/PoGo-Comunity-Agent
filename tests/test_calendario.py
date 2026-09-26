@@ -81,7 +81,7 @@ class TestConstruirIcs:
 
 class TestTool:
     async def test_caso_normal(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr(cal, "DIR_SALIDA", tmp_path)
+        monkeypatch.setenv("HXQ_DATA_DIR", str(tmp_path))
         salida = await _llamar(
             titulo="Quedada",
             lugar="Parque",
@@ -90,14 +90,14 @@ class TestTool:
             hora_fin="20:30",
         )
         assert ".ics" in salida
-        assert list(tmp_path.glob("*.ics"))
+        assert list((tmp_path / "calendario").glob("*.ics"))
 
     async def test_sin_hora_de_fin_asume_dos_horas(self, tmp_path, monkeypatch) -> None:
         from icalendar import Calendar
 
-        monkeypatch.setattr(cal, "DIR_SALIDA", tmp_path)
+        monkeypatch.setenv("HXQ_DATA_DIR", str(tmp_path))
         await _llamar(titulo="Q", lugar="P", fecha="2026-10-03", hora_inicio="18:00")
-        c = Calendar.from_ical(next(tmp_path.glob("*.ics")).read_bytes())
+        c = Calendar.from_ical(next((tmp_path / "calendario").glob("*.ics")).read_bytes())
         ev = c.walk("VEVENT")[0]
         assert ev["DTEND"].dt - ev["DTSTART"].dt == cal.DURACION_POR_DEFECTO
 
@@ -105,9 +105,9 @@ class TestTool:
         """No la del servidor: un contenedor en UTC agendaria seis horas tarde."""
         from icalendar import Calendar
 
-        monkeypatch.setattr(cal, "DIR_SALIDA", tmp_path)
+        monkeypatch.setenv("HXQ_DATA_DIR", str(tmp_path))
         await _llamar(titulo="Q", lugar="P", fecha="2026-10-03", hora_inicio="18:00")
-        c = Calendar.from_ical(next(tmp_path.glob("*.ics")).read_bytes())
+        c = Calendar.from_ical(next((tmp_path / "calendario").glob("*.ics")).read_bytes())
         inicio = c.walk("VEVENT")[0]["DTSTART"].dt
         assert inicio.utcoffset() == datetime(2026, 10, 3, 18, 0, tzinfo=MX).utcoffset()
         assert inicio.hour == 18
@@ -115,11 +115,11 @@ class TestTool:
     async def test_cruzar_medianoche_no_da_duracion_negativa(self, tmp_path, monkeypatch) -> None:
         from icalendar import Calendar
 
-        monkeypatch.setattr(cal, "DIR_SALIDA", tmp_path)
+        monkeypatch.setenv("HXQ_DATA_DIR", str(tmp_path))
         await _llamar(
             titulo="Q", lugar="P", fecha="2026-10-03", hora_inicio="23:00", hora_fin="01:00"
         )
-        c = Calendar.from_ical(next(tmp_path.glob("*.ics")).read_bytes())
+        c = Calendar.from_ical(next((tmp_path / "calendario").glob("*.ics")).read_bytes())
         ev = c.walk("VEVENT")[0]
         assert ev["DTEND"].dt > ev["DTSTART"].dt
         assert ev["DTEND"].dt - ev["DTSTART"].dt == timedelta(hours=2)

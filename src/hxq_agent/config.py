@@ -5,7 +5,9 @@ Un solo lugar donde vive la configuracion. Nada mas en el proyecto lee `os.envir
 
 from __future__ import annotations
 
+import tempfile
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -41,6 +43,15 @@ class Settings(BaseSettings):
     # para poder ajustarlas sin redeploy.
     hxq_official_sources: str = "pokemongo.com,pokemongolive.com,leekduck.com,serebii.net"
 
+    # ---------- Archivos generados ----------
+    # Donde se escriben piezas, calendarios y caches. Vacio = un subdirectorio del
+    # temporal del sistema, que es escribible en cualquier entorno.
+    #
+    # NUNCA por debajo del codigo ni del directorio de trabajo: en el contenedor /app
+    # es de root y el proceso corre sin privilegios, asi que un mkdir ahi falla con
+    # "Permission denied" solo en produccion.
+    hxq_data_dir: str = ""
+
     # ---------- Persistencia ----------
     # Cadena de Neon (o cualquier Postgres). Vacia = la app corre sin historial.
     database_url: str = ""
@@ -67,6 +78,23 @@ class Settings(BaseSettings):
         return frozenset(
             email.strip().lower() for email in self.hxq_admin_emails.split(",") if email.strip()
         )
+
+    @property
+    def data_dir(self) -> Path:
+        """Directorio raiz de los archivos generados. Se crea si no existe."""
+        base = (
+            Path(self.hxq_data_dir.strip())
+            if self.hxq_data_dir.strip()
+            else Path(tempfile.gettempdir()) / "hxq-agent"
+        )
+        base.mkdir(parents=True, exist_ok=True)
+        return base
+
+    def subdir(self, nombre: str) -> Path:
+        """Subdirectorio de `data_dir`, creado si hace falta."""
+        d = self.data_dir / nombre
+        d.mkdir(parents=True, exist_ok=True)
+        return d
 
     @property
     def official_sources(self) -> list[str]:

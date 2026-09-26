@@ -219,3 +219,17 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
     permite montar el Pokemon sobre el fondo neon sin recuadro. El nombre en espanol vive
     en `/pokemon-species/`, no en `/pokemon/`, y el arte se indexa por numero de especie,
     no por el id de la forma.
+
+30. **Nada se escribe bajo `/app` en el contenedor.** El proceso corre como usuario sin
+    privilegios y `/app` es de root, asi que `Path.cwd() / "out"` falla con
+    `[Errno 13] Permission denied` **solo en produccion**: en local el desarrollador es
+    dueno de todo y no se reproduce.
+
+    Ya paso dos veces (con `/app/.files` de Chainlit y con `/app/out` de las piezas), asi
+    que ahora los archivos generados van a `settings.subdir(...)`, que cuelga de
+    `HXQ_DATA_DIR` o del temporal del sistema. `tests/test_rutas_escritura.py` escanea el
+    codigo en busca de rutas de escritura peligrosas para que no haya una tercera vez.
+
+    Ojo con el falso negativo: escribir dentro del paquete (`Path(__file__).parent / ...`)
+    funcionaba de casualidad porque el Dockerfile hace `COPY --chown=hxq:hxq src`. Sigue
+    siendo mala practica y el test tambien lo caza.

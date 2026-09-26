@@ -20,9 +20,12 @@ from hxq_agent.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
+
 # Cache en disco por hash del prompt: regenerar la misma pieza no deberia volver a
 # pagar una imagen. Se borra solo cuando el usuario lo pida.
-DIR_CACHE = Path(__file__).parent / "cache_arte"
+def _dir_cache() -> Path:
+    return get_settings().subdir("cache_arte")
+
 
 # Cuadrado: el arte va centrado en una pieza cuadrada.
 TAMANO = "1024x1024"
@@ -63,8 +66,7 @@ async def generar_arte(
     settings = settings or get_settings()
     prompt = construir_prompt(descripcion)
 
-    DIR_CACHE.mkdir(exist_ok=True)
-    cacheado = DIR_CACHE / f"{_clave(prompt, calidad)}.png"
+    cacheado = _dir_cache() / f"{_clave(prompt, calidad)}.png"
     if usar_cache and cacheado.exists():
         logger.info("Arte servido de cache: %s", cacheado.name)
         return cacheado.read_bytes()

@@ -13,7 +13,7 @@ from hxq_agent.brand import pokemon as pk
 @pytest.fixture(autouse=True)
 def _cache_aislada(tmp_path, monkeypatch):
     """Cache en un directorio temporal: los tests no deben ensuciar el repo."""
-    monkeypatch.setattr(pk, "DIR_CACHE", tmp_path / "cache")
+    monkeypatch.setenv("HXQ_DATA_DIR", str(tmp_path))
 
 
 class TestNormalizarNombre:
@@ -114,8 +114,8 @@ class TestObtenerPokemon:
         await pk.obtener_pokemon("cottonee")
         assert "HuixquiGo" in mock_httpx.peticiones[0].headers["user-agent"]
 
-    async def test_la_cache_guarda_json_valido(self, mock_httpx) -> None:
+    async def test_la_cache_guarda_json_valido(self, mock_httpx, tmp_path) -> None:
         mock_httpx.usar(_handler())
         await pk.obtener_pokemon("cottonee")
-        archivo = pk.DIR_CACHE / "cottonee.json"
+        archivo = tmp_path / "cache_pokemon" / "cottonee.json"
         assert json.loads(archivo.read_text(encoding="utf-8"))["numero"] == 546
