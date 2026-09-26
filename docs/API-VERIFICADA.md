@@ -233,3 +233,15 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
     Ojo con el falso negativo: escribir dentro del paquete (`Path(__file__).parent / ...`)
     funcionaba de casualidad porque el Dockerfile hace `COPY --chown=hxq:hxq src`. Sigue
     siendo mala practica y el test tambien lo caza.
+
+31. **El resultado de una tool llega como `list[Content]`, no como `str`.** En un
+    `@function_middleware`, `context.result` es una lista de objetos `Content`, asi que
+    `str(context.result)` produce `[<agent_framework._types.Content object at 0x...>]`.
+
+    Rompia dos cosas a la vez y sin ningun error visible: el panel de la tool mostraba
+    ese repr, y el detector de archivos generados no encontraba ninguna ruta, asi que la
+    imagen y el calendario nunca se le adjuntaban al admin. Los archivos se generaban
+    correctamente y no habia forma de obtenerlos.
+
+    Hay que extraer el texto recorriendo la lista y leyendo `.text` de cada elemento.
+    Lo mismo aplica a `tool.invoke(...)`, que devuelve la misma forma.

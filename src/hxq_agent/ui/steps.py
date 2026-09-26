@@ -59,6 +59,26 @@ def _resumir_argumentos(arguments: Any) -> str:
     return " · ".join(partes)[:300]
 
 
+def texto_resultado(resultado: Any) -> str:
+    """Texto plano de lo que devolvio una tool.
+
+    MAF entrega el resultado como `list[Content]`, no como `str`. Hacerle `str()`
+    directamente produce `[<agent_framework._types.Content object at 0x...>]`, que es
+    inservible por partida doble: el panel de la tool muestra ese repr, y el buscador de
+    archivos generados no encuentra ninguna ruta, asi que la imagen y el calendario nunca
+    se le adjuntan al admin.
+    """
+    if resultado is None:
+        return ""
+    if isinstance(resultado, str):
+        return resultado
+    if isinstance(resultado, list):
+        return "\n".join(texto_resultado(x) for x in resultado)
+    if (texto := getattr(resultado, "text", None)) is not None:
+        return str(texto)
+    return str(resultado)
+
+
 @function_middleware
 async def mostrar_tools_en_ui(context: FunctionInvocationContext, call_next: Any) -> None:
     """Envuelve cada invocacion de tool en un `cl.Step` colapsable."""
@@ -73,8 +93,7 @@ async def mostrar_tools_en_ui(context: FunctionInvocationContext, call_next: Any
 
             await call_next()
 
-            resultado = getattr(context, "result", None)
-            texto = "" if resultado is None else str(resultado)
+            texto = texto_resultado(getattr(context, "result", None))
             generados = rutas_generadas(texto)
 
             if len(texto) > _MAX_SALIDA:
