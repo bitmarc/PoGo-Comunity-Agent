@@ -17,7 +17,7 @@
 > | Modelo de imagen `gpt-image-1.5` | El deployment real es `gpt-image-2` |
 > | Región del despliegue sin decidir | `westus3`, para coincidir con el recurso de Azure OpenAI |
 > | Dockerfile con Playwright desde la Fase 2 | Aplazado a la Fase 3: ~1 GB de imagen y varios segundos de cold start que todavía no compran nada. La imagen actual pesa 327 MB |
-> | CI/CD "un push redespliega solo" | Los jobs `test` y `build` funcionan; `deploy` está **bloqueado**: la cuenta de Azure es invitada en el tenant (`#EXT#`) y no puede crear la app registration que necesita OIDC. Los despliegues se hacen a mano por ahora |
+> | CI/CD "un push redespliega solo" | **Funcionando.** Se asumio que una cuenta invitada no podia crear app registrations; era falso, la politica del tenant lo permite. Los tres jobs en verde con OIDC, sin secreto de service principal |
 >
 > ### Verificado en producción, dentro de Azure
 >
@@ -34,11 +34,9 @@
 >
 > ### Deuda conocida
 >
-> 1. **CI/CD sin desplegar** (permisos de tenant). Alternativas: pedir permisos, o un
->    script de despliegue local.
-> 2. **Credenciales que pasaron por un chat**: la contraseña de Neon y el PAT de GitHub
+> 1. **Credenciales que pasaron por un chat**: la contraseña de Neon y el PAT de GitHub
 >    conviene rotarlas. Tras rotarlas basta con actualizar los secretos de la Container App.
-> 3. **`maxReplicas: 1`** porque Chainlit guarda estado de sesión en memoria. Suficiente
+> 2. **`maxReplicas: 1`** porque Chainlit guarda estado de sesión en memoria. Suficiente
 >    para 2-5 admins; escalar exigiría sacar ese estado del proceso.
 
 ## Context

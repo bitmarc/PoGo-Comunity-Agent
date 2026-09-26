@@ -131,3 +131,48 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
     ```
 
     Si el `redirect_uri` del querystring empieza por `http://`, es esto.
+
+## CI/CD con OIDC: el subject no es el que dice la documentacion
+
+19. **GitHub puede presentar el subject con identificadores inmutables.** La forma
+    documentada es `repo:<owner>/<repo>:environment:<env>`, pero este repo presenta:
+
+    ```
+    repo:bitmarc@59296507/hxq-agent@1388231813:environment:production
+    ```
+
+    Incluye los IDs numericos del owner y del repo, para que renombrarlos no rompa la
+    confianza federada. Una credencial con el formato clasico **no coincide** y el login
+    falla con:
+
+    ```
+    AADSTS700213: No matching federated identity record found for presented assertion
+    subject 'repo:...'
+    ```
+
+    El propio mensaje trae el subject presentado: hay que copiarlo literalmente y crear la
+    credencial con el. Aqui estan registradas las cuatro combinaciones (clasica e
+    inmutable, por rama y por environment) para no depender de cual emita GitHub.
+
+20. **Un job con `environment:` cambia el subject.** Usa
+    `:environment:<nombre>` en vez de `:ref:refs/heads/<rama>`. Con ambos declarados en el
+    workflow, la credencial tiene que ser la del environment.
+
+21. **`az role assignment create` falla con `MissingSubscription`** en este entorno, tanto
+    con alcance de recurso como de resource group, y con el rol por nombre o por ID. El
+    contexto de suscripcion, el provider y las lecturas funcionan: es la CLI. Se resuelve
+    por REST:
+
+    ```bash
+    az rest --method PUT \
+      --url "https://management.azure.com${SCOPE}/providers/Microsoft.Authorization/roleAssignments/$(uuidgen)?api-version=2022-04-01" \
+      --body @cuerpo.json
+    ```
+
+22. **Los invitados SI pueden crear app registrations** si la politica del tenant lo
+    permite. Comprobarlo antes de asumir lo contrario:
+
+    ```bash
+    az rest --method GET --url "https://graph.microsoft.com/v1.0/policies/authorizationPolicy" \
+      --query "defaultUserRolePermissions.allowedToCreateApps"
+    ```
