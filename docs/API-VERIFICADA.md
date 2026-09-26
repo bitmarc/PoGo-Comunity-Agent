@@ -213,3 +213,9 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
 28. **`document.fonts.ready` antes de capturar.** Las fuentes cargan de forma asincrona;
     sin esperarlas la captura sale con la fuente del sistema y el texto ocupa otro ancho,
     asi que los cortes de linea no coinciden con lo que se ve en el navegador.
+
+29. **PokéAPI sirve el arte oficial con canal alfa** en
+    `sprites/pokemon/other/official-artwork/{id}.png` (512x512, ~120 KB). Es lo que
+    permite montar el Pokemon sobre el fondo neon sin recuadro. El nombre en espanol vive
+    en `/pokemon-species/`, no en `/pokemon/`, y el arte se indexa por numero de especie,
+    no por el id de la forma.

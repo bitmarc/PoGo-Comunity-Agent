@@ -167,7 +167,7 @@ hxq-agent/
 
 **Verificación:** URL pública responde, login con Google funciona con el redirect URI de producción, una conversación de ayer sigue en el historial tras recargar, un `git push` a main redespliega solo.
 
-### Fase 3 — Motor de piezas gráficas ⬅️ SIGUIENTE (bloqueada: faltan los assets de branding)
+### Fase 3 — Motor de piezas gráficas ✅ COMPLETADA
 
 Es la parte técnicamente más difícil y la que define si el producto se usa o no.
 
@@ -179,7 +179,7 @@ Es la parte técnicamente más difícil y la que define si el producto se usa o 
 
 **Verificación:** generar la misma quedada 5 veces seguidas y comprobar que fecha, hora y lugar salen idénticos y correctos, y que el branding no varía entre generaciones. Comparar una pieza con una hecha a mano en Canva y que un admin diga cuál prefiere.
 
-### Fase 4 — Paquete de quedada completo *(tu prioridad #1)*
+### Fase 4 — Paquete de quedada completo *(tu prioridad #1)* ⬅️ SIGUIENTE
 
 El flujo de mayor retorno: `uso.txt` #2 + #3 + #5 resueltos de un tirón.
 
@@ -194,6 +194,23 @@ El flujo de mayor retorno: `uso.txt` #2 + #3 + #5 resueltos de un tirón.
 - Al aprobar: se archiva en la biblioteca (Postgres + Blob) con fecha, tipo, canal y el prompt que lo produjo.
 
 **Verificación end-to-end:** generar una quedada real de la comunidad, pegar los tres bloques en Campfire, WhatsApp e Instagram **sin editar ni una palabra**, e importar el `.ics`. Si hay que editar, el prompt o la plantilla no están listos.
+
+### Fase 4.5 — Infografías de evento oficial *(nueva, evaluada el 26/09/2026)*
+
+Las piezas más ricas de la comunidad: arte del Pokémon, tipos, counters recomendados con
+sus movimientos, PC de jefe, megas y notas. Fuentes verificadas en vivo y documentadas en
+[`DATOS-POKEMON.md`](DATOS-POKEMON.md).
+
+- **PokéAPI ya está implementado** (Fase 3): arte oficial con canal alfa, tipos reales y
+  nombre en español.
+- **Pokébattler evaluado, no implementado.** Funciona sin autenticación y sus condiciones
+  son razonables (atribución obligatoria, caché agresiva, User-Agent identificable, no
+  recorrer el espacio combinatorio). Se aplaza porque el coste no está en la API sino en
+  el mapeo de sus nombres (`ZAMAZENTA_CROWNED_SHIELD_FORM`, `METAL_CLAW_FAST`) a ids de
+  PokéAPI y a nombres de movimiento en español.
+- Empezar por su **servidor MCP** (1–5 KB por respuesta frente a 1.7 MB del HTTP), que
+  MAF soporta de forma nativa con `MCPStreamableHTTPTool`.
+- Requisito de diseño: la plantilla debe llevar la atribución a Pokébattler.
 
 ### Fase 5 — Multi-agente y dinámicas
 

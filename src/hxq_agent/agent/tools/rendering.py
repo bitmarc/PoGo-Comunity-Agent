@@ -21,6 +21,7 @@ from agent_framework import tool
 from pydantic import Field, ValidationError
 
 from hxq_agent.brand.arte import ArteError, como_data_uri, generar_arte
+from hxq_agent.brand.pokemon import PokemonNoEncontrado, obtener_pokemon
 from hxq_agent.brand.render import renderizar
 from hxq_agent.schemas.piezas import PLANTILLAS
 
@@ -84,12 +85,25 @@ async def render_pieza(
             )
         ),
     ],
+    pokemon: Annotated[
+        str,
+        Field(
+            description=(
+                "Nombre del Pokemon protagonista, si la pieza tiene uno. Trae su arte "
+                "OFICIAL y sus tipos reales de PokeAPI, y de esos tipos salen los "
+                "colores de la pieza. Preferible a describir arte: es el Pokemon que "
+                "la gente espera ver. Formas especiales: 'charizard-mega-y', "
+                "'deoxys-attack'. Dejalo vacio si la pieza no lleva Pokemon."
+            )
+        ),
+    ] = "",
     descripcion_arte: Annotated[
         str,
         Field(
             description=(
-                "Escena para la ilustracion central, en una frase. Dejala VACIA si no "
-                "quieres arte. IMPORTANTE: no menciones Pokemon ni nombres de Pokemon: "
+                "Escena para la ilustracion central, en una frase. Solo se usa si NO "
+                "hay `pokemon`. Dejala vacia si no quieres arte. IMPORTANTE: no "
+                "menciones Pokemon ni nombres de Pokemon: "
                 "el filtro de Azure rechaza generar propiedad intelectual y la pieza "
                 "sale sin arte. Describe la escena de otro modo: entrenadores, amigos "
                 "con gorras, criaturas fantasticas, paisajes."
@@ -123,7 +137,22 @@ async def render_pieza(
         )
 
     aviso_arte = ""
-    if descripcion_arte.strip():
+
+    # El arte oficial gana sobre el generado: es el Pokemon que la gente espera ver, y
+    # ademas sus tipos reales fijan los colores de la pieza.
+    if pokemon.strip():
+        try:
+            datos_pkmn = await obtener_pokemon(pokemon)
+            if datos_pkmn["arte"]:
+                pieza.imagen_hero = como_data_uri(datos_pkmn["arte"])
+            if datos_pkmn["tipos"] and not pieza.tipos:
+                pieza.tipos = datos_pkmn["tipos"][:2]
+        except PokemonNoEncontrado as exc:
+            return f"{exc}\nPreguntale al admin como se escribe antes de reintentar."
+        except Exception as exc:
+            logger.warning("Fallo PokeAPI para %s: %s", pokemon, exc)
+            aviso_arte = "\n\nNOTA: no se pudo traer el arte oficial; la pieza va sin imagen."
+    elif descripcion_arte.strip():
         try:
             png_arte = await generar_arte(descripcion_arte)
             pieza.imagen_hero = como_data_uri(png_arte)
