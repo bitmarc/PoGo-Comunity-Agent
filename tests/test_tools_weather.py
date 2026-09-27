@@ -7,7 +7,8 @@ un pronostico.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
@@ -16,6 +17,17 @@ from hxq_agent.agent.tools import weather
 from hxq_agent.config import Settings
 
 HOY = date(2026, 9, 24)
+MX = ZoneInfo("America/Mexico_City")
+
+
+def hoy_comunidad() -> date:
+    """Hoy en la zona de la comunidad, no en la del runner.
+
+    CI corre en UTC: a las 00:48 UTC del dia 27 son las 18:48 del 26 en Mexico, asi que
+    `date.today() - 1 dia` seguia siendo hoy para la tool y el test fallaba. Dependia de
+    la hora a la que se ejecutara, asi que en local pasaba siempre.
+    """
+    return datetime.now(MX).date()
 
 
 @pytest.fixture(autouse=True)
@@ -65,11 +77,11 @@ class TestCodigosWmo:
 
 class TestLimites:
     async def test_fecha_pasada(self) -> None:
-        ayer = (date.today() - timedelta(days=1)).isoformat()
+        ayer = (hoy_comunidad() - timedelta(days=1)).isoformat()
         assert "ya paso" in await _llamar(lugar="Guadalajara", fecha=ayer)
 
     async def test_fuera_del_horizonte_prohibe_opinar(self) -> None:
-        lejos = (date.today() + timedelta(days=40)).isoformat()
+        lejos = (hoy_comunidad() + timedelta(days=40)).isoformat()
         salida = await _llamar(lugar="Guadalajara", fecha=lejos)
         assert "no hay" in salida.lower()
         assert "no afirmes nada del clima" in salida
@@ -84,7 +96,7 @@ class TestLimites:
 
 class TestConsultaReal:
     def _handler(self, con_resultados: bool = True, dias: int = 3):
-        objetivo = (date.today() + timedelta(days=dias)).isoformat()
+        objetivo = (hoy_comunidad() + timedelta(days=dias)).isoformat()
 
         def handler(req: httpx.Request) -> httpx.Response:
             if "geocoding" in str(req.url):
@@ -121,7 +133,7 @@ class TestConsultaReal:
 
     async def test_pronostico_completo_con_fuente(self, mock_httpx) -> None:
         mock_httpx.usar(self._handler())
-        objetivo = (date.today() + timedelta(days=3)).isoformat()
+        objetivo = (hoy_comunidad() + timedelta(days=3)).isoformat()
         salida = await _llamar(lugar="Guadalajara", fecha=objetivo)
 
         assert "Guadalajara, Estado de Jalisco" in salida
@@ -131,7 +143,7 @@ class TestConsultaReal:
 
     async def test_usa_la_timezone_de_la_comunidad(self, mock_httpx) -> None:
         mock_httpx.usar(self._handler())
-        objetivo = (date.today() + timedelta(days=3)).isoformat()
+        objetivo = (hoy_comunidad() + timedelta(days=3)).isoformat()
         await _llamar(lugar="Guadalajara", fecha=objetivo)
 
         forecast = [r for r in mock_httpx.peticiones if "geocoding" not in str(r.url)][0]
@@ -139,7 +151,7 @@ class TestConsultaReal:
 
     async def test_lugar_inexistente(self, mock_httpx) -> None:
         mock_httpx.usar(self._handler(con_resultados=False))
-        objetivo = (date.today() + timedelta(days=3)).isoformat()
+        objetivo = (hoy_comunidad() + timedelta(days=3)).isoformat()
         salida = await _llamar(lugar="Xyzqw", fecha=objetivo)
         assert "No encontre el lugar" in salida
 
@@ -148,6 +160,6 @@ class TestConsultaReal:
             raise httpx.ConnectError("sin red")
 
         mock_httpx.usar(explota)
-        objetivo = (date.today() + timedelta(days=3)).isoformat()
+        objetivo = (hoy_comunidad() + timedelta(days=3)).isoformat()
         salida = await _llamar(lugar="Guadalajara", fecha=objetivo)
         assert "no inventes el pronostico" in salida
