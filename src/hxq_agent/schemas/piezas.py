@@ -190,9 +190,46 @@ class Dinamica(_PiezaBase):
         return ""
 
 
+class InfografiaRaid(_PiezaBase):
+    """Infografia de un jefe de incursion.
+
+    A diferencia de las demas, casi todos sus datos NO los escribe el agente: los reune
+    `brand/incursion.py` de Pokebattler y PokeAPI. El agente solo aporta el titulo, el
+    horario y las notas.
+    """
+
+    plantilla: Literal["infografia_raid"] = "infografia_raid"
+
+    # Rellenados por el ensamblador, no por el modelo.
+    pc_normal: str = ""
+    pc_potenciado: str = ""
+    debilidades: list[str] = []
+    counters: list[dict[str, str]] = []
+    megas: list[dict[str, str]] = []
+    atribucion: str = ""
+
+    fecha: date | None = None
+    hora_inicio: time | None = None
+    hora_fin: time | None = None
+    notas: Annotated[list[Annotated[str, Field(max_length=60)]], Field(max_length=4)] = []
+
+    @property
+    def fecha_texto(self) -> str:
+        return fecha_larga(self.fecha) if self.fecha else ""
+
+    @property
+    def horario_texto(self) -> str:
+        if self.hora_inicio and self.hora_fin:
+            return f"{hora_12h(self.hora_inicio)} a {hora_12h(self.hora_fin)}"
+        if self.hora_inicio:
+            return f"desde las {hora_12h(self.hora_inicio)}"
+        return ""
+
+
 # Registro de plantillas: el nombre que usa el agente -> el modelo que valida.
 PLANTILLAS: dict[str, type[_PiezaBase]] = {
     "quedada": Quedada,
     "anuncio_evento": AnuncioEvento,
     "dinamica": Dinamica,
+    "infografia_raid": InfografiaRaid,
 }

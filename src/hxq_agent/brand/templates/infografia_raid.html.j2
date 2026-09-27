@@ -1,0 +1,170 @@
+{# Infografia de incursion: la pieza mas densa.
+
+   Replica la estructura de las que publica la comunidad: el jefe con su arte arriba,
+   los datos duros a los lados, y los counters en rejilla con sus movimientos debajo.
+
+   Lleva la atribucion a Pokebattler en el pie, que es requisito de sus condiciones de
+   uso al publicar datos derivados. #}
+{% extends "base.html.j2" %}
+
+{% block estilos %}
+  .cuerpo { gap: 18px; justify-content: flex-start; padding-top: 8px; }
+
+  /* Fila superior: PC a la izquierda, arte en medio, debilidades a la derecha,
+     como en la pieza de Groudon. */
+  .cabecera {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr 1fr;
+    align-items: center;
+    gap: 18px;
+  }
+  .ficha { padding: 20px 16px; text-align: center; }
+  .ficha__titulo {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .ficha__fila { font-size: 27px; line-height: 1.45; }
+  .ficha__fila b { font-family: "Baloo 2", sans-serif; font-weight: 800; }
+
+  .jefe { display: flex; align-items: center; justify-content: center; }
+  .jefe__img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 22px color-mix(in srgb, var(--acento-1) 60%, transparent));
+  }
+
+  .debilidades { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .debilidad {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    padding: 8px 18px;
+    text-transform: uppercase;
+  }
+
+  /* Rejilla de counters: tres por fila, como las piezas originales. */
+  .counters__rejilla {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .counter { padding: 14px 10px; text-align: center; }
+  .counter__nombre {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 800;
+    font-size: 25px;
+    line-height: 1.1;
+  }
+  .counter__movs { font-size: 21px; opacity: 0.85; line-height: 1.3; margin-top: 4px; }
+
+  .megas { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .mega { font-size: 24px; padding: 10px 22px; }
+
+  .notas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .nota { font-size: 23px; padding: 9px 20px; }
+
+  /* Atribucion obligatoria por las condiciones de Pokebattler. Discreta pero legible:
+     no es letra pequena escondida. */
+  .atribucion {
+    text-align: center;
+    font-size: 19px;
+    opacity: 0.6;
+    /* margin-top:auto la empuja justo encima del pie en vez de dejarla flotando
+       a media altura, donde chocaba con el lockup de la comunidad. */
+    margin-top: auto;
+    padding-top: 6px;
+  }
+{% endblock %}
+
+{# El arte va entre las fichas, no arriba. #}
+{% block hero %}{% endblock %}
+
+{% block cuerpo %}
+<section class="cabecera">
+
+  <div class="ficha tarjeta neon-borde" style="--glow: var(--acento-1)">
+    <div class="ficha__titulo neon-texto--color" style="--glow: var(--acento-1)">
+      Puntos de combate
+    </div>
+    <div class="ficha__fila">Normal<br><b>{{ pc_normal }}</b></div>
+    <div class="ficha__fila" style="margin-top:8px">Potenciado<br><b>{{ pc_potenciado }}</b></div>
+  </div>
+
+  <div class="jefe">
+    {% if imagen_hero %}
+    <img class="jefe__img" src="{{ imagen_hero }}" alt="">
+    {% endif %}
+  </div>
+
+  <div class="ficha tarjeta neon-borde" style="--glow: var(--acento-2)">
+    <div class="ficha__titulo neon-texto--color" style="--glow: var(--acento-2)">
+      Debilidades
+    </div>
+    <div class="debilidades">
+      {% for d in debilidades %}
+      <span class="debilidad pildora neon-borde"
+            style="--glow: {{ 'var(--acento-1)' if loop.index0 % 2 else 'var(--acento-2)' }}">
+        {{ d }}
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+
+</section>
+
+{% if fecha_texto or horario_texto %}
+<section class="megas">
+  {% if fecha_texto %}
+  <span class="mega pildora neon-borde" style="--glow: var(--acento-1)">{{ fecha_texto }}</span>
+  {% endif %}
+  {% if horario_texto %}
+  <span class="mega pildora neon-borde" style="--glow: var(--acento-2)">{{ horario_texto }}</span>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if counters %}
+<section class="tarjeta neon-borde" style="--glow: var(--acento-1); padding-top: 38px">
+  <span class="tarjeta__etiqueta neon-texto--color" style="--glow: var(--acento-1)">
+    Mejores counters
+  </span>
+  <div class="counters__rejilla">
+    {% for c in counters %}
+    <div class="counter tarjeta neon-borde"
+         style="--glow: {{ 'var(--acento-2)' if loop.index0 % 2 else 'var(--acento-1)' }}">
+      <div class="counter__nombre">{{ c.nombre }}</div>
+      <div class="counter__movs">{{ c.movimientos }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if megas %}
+<section class="megas">
+  {% for m in megas %}
+  <span class="mega pildora neon-borde"
+        style="--glow: {{ 'var(--acento-1)' if loop.index0 % 2 else 'var(--acento-2)' }}">
+    {{ m.nombre }}
+  </span>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if notas %}
+<section class="notas">
+  {% for n in notas %}
+  <span class="nota pildora neon-borde" style="--glow: var(--acento-2)">{{ n }}</span>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if atribucion %}
+<div class="atribucion">{{ atribucion }}</div>
+{% endif %}
+{% endblock %}

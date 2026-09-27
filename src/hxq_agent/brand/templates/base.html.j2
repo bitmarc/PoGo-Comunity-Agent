@@ -39,11 +39,16 @@
   </header>
 
   <main class="cuerpo">
+    {# Bloque y no `if` suelto: las plantillas que colocan el arte en otro sitio
+       (la de incursion lo pone entre las fichas) lo sobrescriben vacio. Sin esto
+       la imagen se dibujaba dos veces y la de arriba pisaba el subtitulo. #}
+    {% block hero %}
     {% if imagen_hero %}
     <div class="hero">
       <img class="hero__img" src="{{ imagen_hero }}" alt="">
     </div>
     {% endif %}
+    {% endblock %}
     {% block cuerpo %}{% endblock %}
   </main>
 

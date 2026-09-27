@@ -79,3 +79,46 @@ de Pokébattler y una dependencia de su servidor.
 
 Conviene medir las dos rutas antes de decidir: HTTP crudo con caché propia es más
 predecible; MCP es mucho más barato en tokens y en código.
+
+---
+
+## Actualización (27/09/2026): Pokébattler implementado
+
+Se implementó, y por **HTTP y no por MCP**, al revés de lo que recomendaba el análisis
+inicial. El motivo: el MCP optimiza el tamaño de respuesta porque asume que **el modelo**
+consume los datos. En nuestra arquitectura no es así — el modelo pide *"la infografía de
+Groudon"* y es la tool quien construye la pieza — así que los 1,7 MB se parsean en el
+servidor y nunca llegan al contexto. A cambio evitamos depender de una cuenta y
+controlamos nosotros la caché.
+
+**El mapeo de nombres resultó mucho más barato de lo previsto.** `/pokemon` incluye
+`pokedex.pokemonNum`, el número de especie, que une las dos APIs sin tablas a mano. Y
+también trae las **stats de Pokémon GO** (`baseAttack`, `baseDefense`, `baseStamina`),
+que PokéAPI no tiene porque da las del juego principal.
+
+Con esas stats se calcula el PC de captura:
+
+```
+PC = floor( (Atk+IV) · √(Def+IV) · √(Sta+IV) · CPM² / 10 )
+CPM: nivel 20 = 0.5974 · nivel 25 = 0.667934 · suelo de IV en incursión = 10
+```
+
+Verificado contra la infografía de Groudon ya publicada por la comunidad: da
+**2260-2351** normal y **2825-2939** potenciado, los cuatro números exactos de la pieza
+original. `tests/test_incursiones.py` lo fija como regresión.
+
+### Lo que sí costó
+
+Las **formas**. Pokébattler distingue `METAGROSS` de `METAGROSS_MEGA` y `KYUREM_BLACK_FORM`
+de `KYUREM_WHITE_FORM`, pero las tres comparten número de Pokédex, así que todas salían
+con el mismo nombre en español y la lista de counters mostraba duplicados. Hay 17 sufijos
+de forma mapeados en `traduccion.py`, ordenados de más largo a más corto porque
+`_ALOLA_SHADOW_FORM` se detectaría como `_SHADOW_FORM` y perdería la región.
+
+Y **Poder Oculto**: Pokémon GO lo desglosa por tipo (17 variantes) y PokéAPI solo tiene la
+entrada genérica, así que se resuelve aparte sin consultar.
+
+### Atribución
+
+La plantilla lleva impreso «Datos de counters: Pokébattler», y el agente lo menciona en su
+respuesta. Es requisito de sus condiciones de uso al publicar datos derivados.

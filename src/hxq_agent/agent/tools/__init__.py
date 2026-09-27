@@ -12,12 +12,15 @@ from agent_framework import FunctionTool
 
 from hxq_agent.agent.tools.biblioteca import buscar_en_biblioteca
 from hxq_agent.agent.tools.calendario import crear_ics
+from hxq_agent.agent.tools.incursiones import infografia_incursion, jefes_de_incursion
 from hxq_agent.agent.tools.rendering import render_pieza
 from hxq_agent.agent.tools.search import buscar_web
 from hxq_agent.agent.tools.weather import consultar_clima
 
 __all__ = [
     "buscar_en_biblioteca",
+    "infografia_incursion",
+    "jefes_de_incursion",
     "buscar_web",
     "build_tools",
     "consultar_clima",
@@ -28,4 +31,12 @@ __all__ = [
 
 def build_tools() -> list[FunctionTool]:
     """Las tools disponibles."""
-    return [buscar_web, consultar_clima, render_pieza, crear_ics, buscar_en_biblioteca]
+    return [
+        buscar_web,
+        consultar_clima,
+        render_pieza,
+        crear_ics,
+        buscar_en_biblioteca,
+        jefes_de_incursion,
+        infografia_incursion,
+    ]

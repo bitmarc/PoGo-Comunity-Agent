@@ -32,6 +32,8 @@ _ETIQUETAS: dict[str, str] = {
     "render_pieza": "Dibujando la pieza",
     "crear_ics": "Preparando el calendario",
     "buscar_en_biblioteca": "Revisando lo ya publicado",
+    "jefes_de_incursion": "Consultando las incursiones activas",
+    "infografia_incursion": "Armando la infografía de incursión",
 }
 
 _MAX_SALIDA = 4000
