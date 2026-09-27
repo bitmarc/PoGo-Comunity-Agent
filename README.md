@@ -8,7 +8,14 @@ Stack: Microsoft Agent Framework 1.x + Chainlit, desplegado en Azure Container A
 
 **En produccion:** https://hxq-agent.whitefield-f29520c3.westus3.azurecontainerapps.io
 (acceso restringido por allowlist de correos).
-Plan completo por fases en [`docs/PLAN.md`](docs/PLAN.md).
+Documentacion:
+
+- [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) — como esta montada la app y como viajan
+  los mensajes entre sus piezas, con diagramas
+- [`docs/PLAN.md`](docs/PLAN.md) — el plan por fases y su estado
+- [`docs/API-VERIFICADA.md`](docs/API-VERIFICADA.md) — detalles comprobados contra las
+  librerias reales, varios de los cuales cuestan una tarde
+- [`docs/DATOS-POKEMON.md`](docs/DATOS-POKEMON.md) — fuentes de datos y sus condiciones
 Superficie de API verificada (y las trampas) en [`docs/API-VERIFICADA.md`](docs/API-VERIFICADA.md).
 
 ## Desarrollo local
