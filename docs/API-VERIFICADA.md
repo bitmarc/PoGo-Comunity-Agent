@@ -245,3 +245,22 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
 
     Hay que extraer el texto recorriendo la lista y leyendo `.text` de cada elemento.
     Lo mismo aplica a `tool.invoke(...)`, que devuelve la misma forma.
+
+## Personalizacion de la interfaz de Chainlit
+
+32. **Los assets de marca se resuelven por glob en `public/`**: `logo_light.*`,
+    `logo_dark.*` (la ruta es `/logo?theme=dark`), `favicon.*` y `theme.json`. Los SVG
+    funcionan. Si no hay `favicon.*`, Chainlit sirve el suyo.
+
+33. **`theme.json` lleva tripletes HSL sin envolver.** `"130 49% 48%"`, no
+    `"hsl(130 49% 48%)"` ni `"#2D853C"`: el frontend los mete dentro de `hsl(...)` al
+    construir las variables CSS. La forma es
+    `{"variables": {"dark": {...}, "light": {...}}}`, y se inyecta como `window.theme`.
+
+34. **La imagen del login trae un filtro oscuro por defecto y no se quita con una cadena
+    vacia.** El frontend hace
+    `login_page_image_dark_filter || "brightness-[0.2] grayscale"`, y `""` es falsy en
+    JavaScript, asi que cae al default y el logo sale turbio. Hay que pasar una clase de
+    Tailwind truthy que no haga nada, como `brightness-100`.
+
+    Y si no se fija `login_page_image`, Chainlit estira el favicon para llenar el panel.

@@ -1,0 +1,87 @@
+{
+  "_comentario": [
+    "Tema de HuixquiGo Agent para Chainlit.",
+    "Los colores van como tripletes HSL sin envolver, que es lo que espera el frontend:",
+    "\"130 49% 45%\" y no \"hsl(130 49% 45%)\" ni \"#2D853C\".",
+    "",
+    "El primario es el verde del logo (#2D853C = 130 49% 35%). En el tema oscuro se sube",
+    "la luminosidad al 48% porque al 35% no contrasta con el fondo y los botones se leen mal.",
+    "El teal de la marca (#0388A6) hace de acento y de anillo de foco."
+  ],
+  "variables": {
+    "dark": {
+      "--background": "258 32% 7%",
+      "--foreground": "260 20% 96%",
+
+      "--card": "258 28% 10%",
+      "--card-foreground": "260 20% 96%",
+      "--popover": "258 28% 10%",
+      "--popover-foreground": "260 20% 96%",
+
+      "--primary": "130 49% 48%",
+      "--primary-foreground": "150 40% 6%",
+
+      "--secondary": "258 24% 15%",
+      "--secondary-foreground": "260 20% 96%",
+
+      "--muted": "258 22% 14%",
+      "--muted-foreground": "258 12% 65%",
+
+      "--accent": "191 80% 40%",
+      "--accent-foreground": "260 20% 96%",
+
+      "--destructive": "349 75% 50%",
+      "--destructive-foreground": "260 20% 96%",
+
+      "--border": "258 22% 18%",
+      "--input": "258 22% 18%",
+      "--ring": "191 85% 45%",
+
+      "--sidebar-background": "258 30% 9%",
+      "--sidebar-foreground": "260 18% 90%",
+      "--sidebar-primary": "130 49% 48%",
+      "--sidebar-primary-foreground": "150 40% 6%",
+      "--sidebar-accent": "258 24% 15%",
+      "--sidebar-accent-foreground": "260 20% 96%",
+      "--sidebar-border": "258 22% 16%",
+      "--sidebar-ring": "191 85% 45%"
+    },
+    "light": {
+      "--background": "40 30% 98%",
+      "--foreground": "258 25% 12%",
+
+      "--card": "0 0% 100%",
+      "--card-foreground": "258 25% 12%",
+      "--popover": "0 0% 100%",
+      "--popover-foreground": "258 25% 12%",
+
+      "--primary": "191 96% 30%",
+      "--primary-foreground": "0 0% 100%",
+
+      "--secondary": "40 20% 94%",
+      "--secondary-foreground": "258 25% 12%",
+
+      "--muted": "40 18% 94%",
+      "--muted-foreground": "258 10% 42%",
+
+      "--accent": "129 49% 37%",
+      "--accent-foreground": "0 0% 100%",
+
+      "--destructive": "349 90% 45%",
+      "--destructive-foreground": "0 0% 100%",
+
+      "--border": "40 15% 88%",
+      "--input": "40 15% 88%",
+      "--ring": "191 96% 33%",
+
+      "--sidebar-background": "40 24% 96%",
+      "--sidebar-foreground": "258 25% 15%",
+      "--sidebar-primary": "191 96% 30%",
+      "--sidebar-primary-foreground": "0 0% 100%",
+      "--sidebar-accent": "40 20% 92%",
+      "--sidebar-accent-foreground": "258 25% 12%",
+      "--sidebar-border": "40 15% 86%",
+      "--sidebar-ring": "191 96% 33%"
+    }
+  }
+}

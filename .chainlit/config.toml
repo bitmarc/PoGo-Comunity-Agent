@@ -32,10 +32,22 @@ edit_message = true
     enabled = false
 
 [UI]
-name = "HXQ"
+name = "HuixquiGo Agent"
 language = "es"
 default_theme = "dark"
 default_sidebar_state = "closed"
+
+# Imagen del panel del login.
+#
+# El filtro por defecto de Chainlit en modo oscuro es "brightness-[0.2] grayscale", que
+# dejaba el logo turbio. Dejarlo vacio NO lo desactiva: el frontend hace
+# `filtro || "brightness-[0.2] grayscale"` y la cadena vacia es falsy en JS, asi que cae
+# al default. Hay que pasar una clase truthy que no haga nada.
+#
+# Si no se fija `login_page_image`, Chainlit usa /favicon estirado, que se ve mal.
+login_page_image = "/public/login.png"
+login_page_image_filter = "brightness-100"
+login_page_image_dark_filter = "brightness-100"
 
 [meta]
 generated_by = "2.12.0"
