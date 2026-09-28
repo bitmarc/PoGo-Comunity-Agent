@@ -112,3 +112,59 @@ class TestBuildInstructions:
     def test_las_reglas_duras_siguen_en_el_prompt(self, settings: Settings, regla: str) -> None:
         """Si alguien edita prompt.md y se lleva una por delante, esto lo caza."""
         assert regla in ins.build_instructions(settings)
+
+
+class TestInventarioDeTools:
+    """El prompt decia "Tienes dos" cuando ya habia siete.
+
+    La seccion de herramientas va por detras del codigo en cuanto se anade una tool, y el
+    sintoma es silencioso: el agente simplemente no usa lo que no sabe que tiene.
+    """
+
+    def test_todas_las_tools_registradas_estan_en_el_prompt(self, settings: Settings) -> None:
+        from hxq_agent.agent.tools import build_tools
+
+        prompt = ins.build_instructions(settings)
+        faltan = [t.name for t in build_tools() if t.name not in prompt]
+        assert not faltan, (
+            f"Estas tools existen pero el prompt no las menciona: {faltan}. "
+            "El agente no usara lo que no sabe que tiene."
+        )
+
+    def test_el_prompt_no_menciona_tools_que_no_existen(self, settings: Settings) -> None:
+        """El error inverso: una tool que se quito y sigue documentada."""
+        import re
+
+        from hxq_agent.agent.tools import build_tools
+
+        reales = {t.name for t in build_tools()}
+        prompt = ins.build_instructions(settings)
+        # Nombres en backticks con parentesis: asi se escriben las tools en el prompt.
+        citadas = set(re.findall(r"`(\w+)\(", prompt))
+        fantasmas = citadas - reales
+        assert not fantasmas, f"El prompt documenta tools que ya no existen: {fantasmas}"
+
+    def test_la_cuenta_declarada_coincide(self, settings: Settings) -> None:
+        """Si el prompt dice un numero de tools, que sea el correcto."""
+        import re
+
+        from hxq_agent.agent.tools import build_tools
+
+        numeros = {
+            "una": 1,
+            "dos": 2,
+            "tres": 3,
+            "cuatro": 4,
+            "cinco": 5,
+            "seis": 6,
+            "siete": 7,
+            "ocho": 8,
+            "nueve": 9,
+            "diez": 10,
+        }
+        prompt = ins.build_instructions(settings)
+        m = re.search(r"Tienes (\w+)\.", prompt)
+        if m and m.group(1).lower() in numeros:
+            assert numeros[m.group(1).lower()] == len(build_tools()), (
+                f"El prompt dice 'Tienes {m.group(1)}' y hay {len(build_tools())} tools."
+            )
