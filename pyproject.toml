@@ -43,3 +43,8 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = ["lento: exige Chromium; se saltan con -m \"not lento\""]
+
+[dependency-groups]
+dev = [
+    "pathspec>=1.1.1",
+]

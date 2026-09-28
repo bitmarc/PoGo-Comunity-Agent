@@ -130,6 +130,15 @@ en Google Cloud Console** junto al de localhost, o el login fallara en produccio
 Despues, cada push a `main` reconstruye la imagen en GHCR y actualiza la Container App
 (`.github/workflows/deploy.yml`).
 
+## El system prompt
+
+Vive en [`src/hxq_agent/agent/prompt.md`](src/hxq_agent/agent/prompt.md), en markdown.
+Ese archivo **es** el prompt: lo que escribas ahi es lo que lee el modelo.
+
+Se relee en cada turno, asi que en local con `-w` los cambios aplican al siguiente
+mensaje sin reiniciar. Los placeholders disponibles estan documentados en la cabecera
+del propio archivo.
+
 ## Configuracion requerida
 
 | Variable | Para que |

@@ -264,3 +264,18 @@ Limites practicos de `az containerapp exec`, utiles para depurar en produccion:
     Tailwind truthy que no haga nada, como `brightness-100`.
 
     Y si no se fija `login_page_image`, Chainlit estira el favicon para llenar el panel.
+
+35. **`.dockerignore` con `*.md` se lleva por delante archivos del paquete.** El patron
+    aplica a cualquier profundidad, asi que excluia `src/hxq_agent/agent/prompt.md`, que
+    ES el system prompt: la app habria arrancado en produccion sin saber que hacer, y en
+    local funcionaria. Se cambio a `/*.md`, que solo afecta a la raiz.
+
+    Es la tercera vez que un archivo necesario no llega al contenedor (antes fueron
+    `chainlit.md` y `public/`). `tests/test_dockerignore.py` lo cubre con `pathspec`, que
+    implementa la misma semantica de patrones que Docker en vez de aproximarla.
+
+36. **`str.format` no sirve para plantillas que edita una persona.** Revienta con
+    `KeyError` en cuanto el texto contiene una llave suelta, y un system prompt acaba
+    teniendo ejemplos de JSON o notas entre llaves. El prompt usa `re.sub` sobre
+    `{{placeholder}}`: una llave suelta es inofensiva y un placeholder desconocido se
+    queda visible en el texto en vez de tumbar el agente.

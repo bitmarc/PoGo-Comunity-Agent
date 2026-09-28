@@ -22,6 +22,9 @@ docs/
 infra/
 uso.txt
 *.log
-*.md
+# Solo los .md de la raiz: los que viven dentro de src/ son parte del paquete.
+# `*.md` a secas excluia src/hxq_agent/agent/prompt.md, que ES el system prompt, y el
+# agente arrancaba en produccion sin saber que hacer.
+/*.md
 !README.md
 !chainlit.md

@@ -133,6 +133,28 @@ ella para su lógica.
 
 ---
 
+## 2.bis El system prompt vive en markdown
+
+`agent/prompt.md` **es** el prompt: lo que hay en ese archivo es literalmente lo que lee
+el modelo. `agent/instructions.py` solo lo carga y sustituye cinco placeholders
+(`{{community}}`, `{{city}}`, `{{timezone}}`, `{{today}}`, `{{weekday}}`).
+
+Tres decisiones que no son obvias:
+
+- **Se sustituye con `re.sub`, no con `str.format`.** El archivo lo edita una persona, y
+  `format` revienta con `KeyError` en cuanto aparece una llave suelta en el texto: un
+  ejemplo de JSON, una nota entre llaves. Un placeholder desconocido se deja visible en
+  vez de tumbar el agente.
+- **Se lee en cada turno, sin caché.** Son ~7 KB frente a una llamada al modelo, y a
+  cambio editar el prompt en local aplica al siguiente mensaje.
+- **La versión se deriva del contenido** (hash SHA-256 corto) en lugar de mantenerse a
+  mano. Un número que hay que acordarse de subir acaba mintiendo.
+
+El comentario HTML de la cabecera documenta los placeholders para quien edite, y se
+elimina antes de enviarlo: gastaría tokens en cada turno sin decirle nada al modelo.
+
+---
+
 ## 3. Un turno de conversación
 
 Lo que pasa desde que el admin escribe hasta que ve la respuesta.
@@ -149,7 +171,8 @@ sequenceDiagram
 
     Admin->>App: escribe un mensaje
     App->>Instr: build_instructions()
-    Note over Instr: se reconstruyen CADA turno:<br/>refrescan la fecha de hoy y<br/>aplican las preferencias del chat
+    Instr->>Instr: lee prompt.md y sustituye {{placeholders}}
+    Note over Instr: se reconstruyen CADA turno:<br/>refrescan la fecha, aplican las<br/>preferencias y releen el archivo
     App->>Agent: run(stream=True, session, middleware, options)
 
     Agent->>AOAI: mensajes + instrucciones + esquemas de tools
@@ -179,8 +202,9 @@ sequenceDiagram
 Dos decisiones de orden que importan:
 
 - **Las instrucciones se reconstruyen por turno**, no una vez por sesión. Así la fecha de
-  hoy se recalcula (relevante si una pestaña queda abierta pasada la medianoche) y los
-  controles del chat aplican de inmediato.
+  hoy se recalcula (relevante si una pestaña queda abierta pasada la medianoche), los
+  controles del chat aplican de inmediato, y `prompt.md` se relee: en local con
+  `chainlit run -w`, editarlo surte efecto en el siguiente mensaje sin reiniciar.
 - **Los botones de aprobación salen al cerrar el turno**, no cuando termina la tool. El
   copy por canal lo escribe el agente *después* de dibujar la pieza; un botón junto a la
   imagen archivaría la pieza sin el texto que la acompaña.
@@ -425,7 +449,7 @@ apaga y lo dice; solo la ausencia de puerta de entrada impide arrancar.
 
 | Quiero… | Empezar por |
 |---|---|
-| Cambiar cómo habla o qué reglas sigue | `agent/instructions.py` |
+| Cambiar cómo habla o qué reglas sigue | **`agent/prompt.md`** — es el prompt tal cual, en markdown |
 | Añadir una capacidad nueva | `agent/tools/` + registrarla en `tools/__init__.py` |
 | Cambiar el aspecto de las piezas | `brand/tokens.css` y `brand/templates/` |
 | Añadir un tipo de pieza | `schemas/piezas.py` + plantilla + `PLANTILLAS` |
