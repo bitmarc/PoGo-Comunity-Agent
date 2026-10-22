@@ -10,7 +10,8 @@ name: Deploy
 #          "subject":"repo:<owner>/<repo>:ref:refs/heads/main",
 #          "audiences":["api://AzureADTokenExchange"]}'
 #      y darle rol Contributor sobre el resource group.
-#   2. Secrets del repo: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#   2. Secrets del repo: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
+#      DATABASE_URL (la cadena de Neon de produccion, para las migraciones)
 #   3. Variables del repo: AZURE_RESOURCE_GROUP, CONTAINER_APP_NAME
 #
 # Se usa OIDC en vez de un secreto de service principal: no hay credencial de larga
@@ -105,8 +106,42 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
+  # Aplica infra/db/*.sql a Neon ANTES de desplegar: la imagen nueva puede consultar
+  # tablas que aun no existen. Va despues del build para no migrar si la imagen no se
+  # pudo construir. Los scripts son idempotentes, asi que correrlos en cada deploy es
+  # seguro aunque no haya nada nuevo.
+  migrate:
     needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Sin extras: apply_schema.py solo necesita asyncpg y el paquete (normalizar_dsn).
+      - name: Instalar dependencias
+        run: uv sync --frozen
+
+      - name: Aplicar esquema
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          # Falla en vez de saltarse el paso: desplegar codigo que espera una tabla nueva
+          # sin crearla deja tools rotas en produccion sin que nadie se entere.
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Falta el secret DATABASE_URL (cadena de Neon de produccion)."
+            exit 1
+          fi
+          uv run python infra/db/apply_schema.py
+
+  deploy:
+    needs: [build, migrate]
     runs-on: ubuntu-latest
     environment: production
     permissions:
