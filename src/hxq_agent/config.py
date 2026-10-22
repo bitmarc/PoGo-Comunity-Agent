@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""
     # Fuentes en las que confiamos para datos de eventos oficiales. Separadas por coma
     # para poder ajustarlas sin redeploy.
-    hxq_official_sources: str = "pokemongo.com,pokemongolive.com,leekduck.com,serebii.net"
+    hxq_official_sources: str = "pokemongo.com,leekduck.com,pogoquest.com,serebii.net"
 
     # ---------- Archivos generados ----------
     # Donde se escriben piezas, calendarios y caches. Vacio = un subdirectorio del
