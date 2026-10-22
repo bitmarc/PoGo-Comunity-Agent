@@ -43,6 +43,23 @@ def normalizar_dsn(url: str) -> str:
     return url
 
 
+class BaseNoDisponible(RuntimeError):
+    """No hay base de datos configurada."""
+
+
+async def conectar(settings: Settings):
+    """Conexion asyncpg suelta para las tablas propias (biblioteca, comunidad).
+
+    Una conexion por operacion y no un pool: son escrituras y lecturas esporadicas de un
+    puñado de admins, y un pool abierto contaria contra los limites del plan de Neon.
+    """
+    import asyncpg
+
+    if not settings.database_url.strip():
+        raise BaseNoDisponible("No hay DATABASE_URL configurada.")
+    return await asyncpg.connect(normalizar_dsn(settings.database_url))
+
+
 def build_storage_client(settings: Settings | None = None):
     """Cliente de Blob para los archivos, o None si no esta configurado.
 

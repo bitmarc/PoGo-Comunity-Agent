@@ -12,6 +12,7 @@ from agent_framework import FunctionTool
 
 from hxq_agent.agent.tools.biblioteca import buscar_en_biblioteca
 from hxq_agent.agent.tools.calendario import crear_ics
+from hxq_agent.agent.tools.comunidad import consultar_comunidad, proponer_cambio_comunidad
 from hxq_agent.agent.tools.incursiones import infografia_incursion, jefes_de_incursion
 from hxq_agent.agent.tools.rendering import render_pieza
 from hxq_agent.agent.tools.search import buscar_web
@@ -24,7 +25,9 @@ __all__ = [
     "buscar_web",
     "build_tools",
     "consultar_clima",
+    "consultar_comunidad",
     "crear_ics",
+    "proponer_cambio_comunidad",
     "render_pieza",
 ]
 
@@ -39,4 +42,6 @@ def build_tools() -> list[FunctionTool]:
         buscar_en_biblioteca,
         jefes_de_incursion,
         infografia_incursion,
+        consultar_comunidad,
+        proponer_cambio_comunidad,
     ]

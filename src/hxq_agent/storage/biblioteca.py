@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from hxq_agent.config import Settings, get_settings
-from hxq_agent.storage.db import normalizar_dsn
+from hxq_agent.storage.db import BaseNoDisponible, conectar
 
 logger = logging.getLogger(__name__)
 
@@ -41,18 +41,17 @@ class Pieza:
     thread_id: str | None = None
 
 
-class BibliotecaNoDisponible(RuntimeError):
+class BibliotecaNoDisponible(BaseNoDisponible):
     """No hay base de datos configurada."""
 
 
 async def _conectar(settings: Settings):
-    import asyncpg
-
-    if not settings.database_url.strip():
+    try:
+        return await conectar(settings)
+    except BaseNoDisponible as exc:
         raise BibliotecaNoDisponible(
             "No hay DATABASE_URL configurada, asi que no se puede archivar nada."
-        )
-    return await asyncpg.connect(normalizar_dsn(settings.database_url))
+        ) from exc
 
 
 async def _subir_imagen(ruta: Path, settings: Settings) -> str | None:

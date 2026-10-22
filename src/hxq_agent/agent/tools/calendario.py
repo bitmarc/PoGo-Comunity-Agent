@@ -44,6 +44,20 @@ def nombre_archivo(titulo: str) -> str:
     return (limpio or "quedada")[:60]
 
 
+def leer_coordenadas(texto: str) -> tuple[float, float] | None:
+    """'19.36,-99.35' -> (19.36, -99.35). None si no es un par lat,lon valido."""
+    partes = [p.strip() for p in texto.split(",")]
+    if len(partes) != 2:
+        return None
+    try:
+        lat, lon = float(partes[0]), float(partes[1])
+    except ValueError:
+        return None
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        return None
+    return lat, lon
+
+
 def construir_ics(
     *,
     titulo: str,
@@ -51,6 +65,7 @@ def construir_ics(
     inicio: datetime,
     fin: datetime,
     descripcion: str = "",
+    geo: tuple[float, float] | None = None,
 ) -> bytes:
     """Genera el contenido del `.ics`.
 
@@ -70,6 +85,9 @@ def construir_ics(
     evento.add("dtend", fin)
     evento.add("dtstamp", datetime.now(inicio.tzinfo))
     evento.add("location", lugar)
+    if geo is not None:
+        # Con GEO, Google y Apple abren el punto exacto en vez de buscar el texto.
+        evento.add("geo", geo)
     if descripcion:
         evento.add("description", descripcion)
     # UID unico: sin el, importar dos quedadas distintas puede sobrescribir una.
@@ -102,6 +120,15 @@ async def crear_ics(
     ] = "",
     descripcion: Annotated[
         str, Field(description="Detalle que vera quien agende: que llevar, punto de reunion.")
+    ] = "",
+    coordenadas: Annotated[
+        str,
+        Field(
+            description=(
+                "Coordenadas 'lat,lon' del punto de reunion, tal como las da "
+                "`consultar_comunidad`. Vacio si el lugar no esta registrado."
+            )
+        ),
     ] = "",
 ) -> str:
     """Genera un archivo .ics para agendar la quedada en cualquier calendario.
@@ -143,8 +170,19 @@ async def crear_ics(
     else:
         fin = inicio + DURACION_POR_DEFECTO
 
+    geo = None
+    if coordenadas.strip():
+        geo = leer_coordenadas(coordenadas)
+        if geo is None:
+            return (
+                f"Las coordenadas {coordenadas!r} no son validas. Mandalas como 'lat,lon', "
+                "por ejemplo 19.3601,-99.3519, o dejalas vacias."
+            )
+        mapa = f"https://www.google.com/maps/search/?api=1&query={geo[0]},{geo[1]}"
+        descripcion = f"{descripcion}\n\nComo llegar: {mapa}".strip()
+
     contenido = construir_ics(
-        titulo=titulo, lugar=lugar, inicio=inicio, fin=fin, descripcion=descripcion
+        titulo=titulo, lugar=lugar, inicio=inicio, fin=fin, descripcion=descripcion, geo=geo
     )
 
     destino = _dir_salida() / f"{nombre_archivo(titulo)}-{dia.isoformat()}.ics"

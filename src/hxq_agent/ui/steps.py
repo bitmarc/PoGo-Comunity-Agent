@@ -20,7 +20,9 @@ from typing import Any
 import chainlit as cl
 from agent_framework import FunctionInvocationContext, function_middleware
 
+from hxq_agent.agent.tools.comunidad import tomar_cambio
 from hxq_agent.ui.acciones import registrar_pendiente
+from hxq_agent.ui.cambios import ofrecer_cambio
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +36,8 @@ _ETIQUETAS: dict[str, str] = {
     "buscar_en_biblioteca": "Revisando lo ya publicado",
     "jefes_de_incursion": "Consultando las incursiones activas",
     "infografia_incursion": "Armando la infografía de incursión",
+    "consultar_comunidad": "Consultando los datos de la comunidad",
+    "proponer_cambio_comunidad": "Preparando el cambio",
 }
 
 _MAX_SALIDA = 4000
@@ -100,6 +104,8 @@ async def mostrar_tools_en_ui(context: FunctionInvocationContext, call_next: Any
 
             texto = texto_resultado(getattr(context, "result", None))
             generados = rutas_generadas(texto)
+            # Antes de truncar: la marca del cambio pendiente va en la salida.
+            cambio = tomar_cambio(texto) if nombre == "proponer_cambio_comunidad" else None
 
             if len(texto) > _MAX_SALIDA:
                 texto = texto[:_MAX_SALIDA] + "\n\n[...truncado]"
@@ -111,7 +117,10 @@ async def mostrar_tools_en_ui(context: FunctionInvocationContext, call_next: Any
         return
 
     # Fuera del `Step`: lo que va dentro de un paso colapsado se queda oculto, y la
-    # pieza y el calendario son justo lo que el admin tiene que ver y descargar.
+    # pieza, el calendario y el boton de confirmar son justo lo que el admin tiene que ver.
+    if cambio is not None:
+        await ofrecer_cambio(cambio)
+
     for ruta in generados:
         if ruta.suffix == ".png":
             # Se anota para poder ofrecer "Aprobar" al cerrar el turno, cuando ya exista
