@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from hxq_agent.agent.tools import calendario as cal
 from hxq_agent.agent.tools import comunidad as tools
+from hxq_agent.config import Settings
 from hxq_agent.schemas.comunidad import (
     CodigoJugador,
     PuntoReunion,
@@ -65,6 +66,16 @@ def base(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[dict[str, Any]]]:
     # de lo que se prueba.
     monkeypatch.setattr(almacen, "listar", listar)
     return datos
+
+
+@pytest.fixture
+def sin_base(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Configuracion sin DATABASE_URL, ignorando el `.env` local.
+
+    El conftest limpia el entorno, pero `Settings` tambien lee `.env`: con un Postgres
+    local configurado ahi, estos tests acabarian hablando con la base de verdad.
+    """
+    monkeypatch.setattr(almacen, "get_settings", lambda: Settings(_env_file=None))
 
 
 async def _invocar(herramienta, **kwargs) -> str:
@@ -167,8 +178,8 @@ class TestConsultar:
         salida = await _invocar(tools.consultar_comunidad, tema="historia")
         assert "proponer_cambio_comunidad" in salida
 
-    async def test_sin_base_de_datos_no_revienta(self) -> None:
-        """Sin DATABASE_URL (el conftest la quita) se responde, no se lanza."""
+    async def test_sin_base_de_datos_no_revienta(self, sin_base) -> None:
+        """Sin DATABASE_URL se responde, no se lanza."""
         salida = await _invocar(tools.consultar_comunidad, tema="puntos_reunion")
         assert "no estan disponibles" in salida
 
@@ -264,7 +275,7 @@ class TestProponerCambio:
         assert "12 digitos" in salida
         assert tools.tomar_cambio(salida) is None
 
-    async def test_sin_base_de_datos_no_revienta(self) -> None:
+    async def test_sin_base_de_datos_no_revienta(self, sin_base) -> None:
         salida = await _invocar(
             tools.proponer_cambio_comunidad,
             tema="historia",
@@ -275,7 +286,7 @@ class TestProponerCambio:
 
 
 class TestAlmacen:
-    async def test_sin_database_url_avisa_con_su_excepcion(self) -> None:
+    async def test_sin_database_url_avisa_con_su_excepcion(self, sin_base) -> None:
         with pytest.raises(ComunidadNoDisponible):
             await almacen.listar("puntos_reunion")
 
