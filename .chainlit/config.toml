@@ -49,5 +49,10 @@ login_page_image = "/public/login.png"
 login_page_image_filter = "brightness-100"
 login_page_image_dark_filter = "brightness-100"
 
+# Un solo avatar para todo lo que dice el bot. Sin esto, el frontend pide
+# /avatars/<autor>, y en los pasos de tool el autor es la etiqueta ("Buscando en la
+# web"), que no tiene archivo: cae a /favicon y en el historial sale el logo viejo.
+default_avatar_file_url = "/public/avatars/huixquigo_agent.png"
+
 [meta]
 generated_by = "2.12.0"
